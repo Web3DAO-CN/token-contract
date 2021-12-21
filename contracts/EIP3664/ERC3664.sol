@@ -198,7 +198,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         uint256 from,
         uint256 to,
         uint256 attrId
-    ) public view virtual returns (bool) {
+    ) public view virtual override returns (bool) {
         return _allowances[attrId][from] == to;
     }
 
@@ -225,7 +225,9 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     }
 
     /**
-     * @dev See {IERC3664Transferable-transferFrom}.
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
      */
     function transferFrom(
         uint256 from,
