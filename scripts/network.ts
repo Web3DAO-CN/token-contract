@@ -43,7 +43,6 @@ export const RPCS = {
     gasPrice: 20000000000,
     accounts: {
       mnemonic: process.env.MNEMONIC,
-      initialIndex: 2,
     },
   },
   bscmain: {

@@ -15,9 +15,10 @@ dotenv.config();
 task("accounts", "Prints the list of accounts", async (taskArgs, bre) => {
   const accounts = await bre.ethers.getSigners();
 
-  for (const account of accounts) {
-    let address = await account.getAddress();
+  for (let i=0;i<10;i++) {
+    let address = await accounts[i].getAddress();
     console.log(
+      "("+i+")",
       address,
       (await bre.ethers.provider.getBalance(address)).toString().white
     );

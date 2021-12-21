@@ -42,6 +42,14 @@ contract Web3DAOCN is
         _;
     }
 
+    modifier onlyHolder(uint256 tokenId) {
+        require(
+            ownerOf(tokenId) == _msgSender(),
+            "Web3DAOCN: caller is not the nft holder"
+        );
+        _;
+    }
+
     /**
      * @dev Creates a new token for `to`. Its token ID will be automatically
      * assigned (and available on the emitted {IERC721-Transfer} event), and the token
@@ -136,6 +144,19 @@ contract Web3DAOCN is
         uint256[] memory amounts
     ) public virtual onlyMinter {
         _burnBatch(tokenId, attrIds, amounts);
+    }
+
+    /**
+     * @dev Approve attribute type `attrId` of token `from` to token `to` called by `from` holder.
+     *
+     * Emits an {AttributeApproval} event.
+     */
+    function approve(
+        uint256 from,
+        uint256 to,
+        uint256 attrId
+    ) public virtual override onlyHolder(from) {
+        super.approve(from, to, attrId);
     }
 
     /**

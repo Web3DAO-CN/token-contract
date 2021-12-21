@@ -27,6 +27,8 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     mapping(uint256 => mapping(uint256 => uint256)) public attrBalances;
     // tokenId => primary attribute Id
     mapping(uint256 => uint256) private _primaryAttrs;
+    // attribute ID => from token ID => to token ID
+    mapping(uint256 => mapping(uint256 => uint256)) private _allowances;
 
     constructor(string memory uri_) {
         _setURI(uri_);
@@ -187,6 +189,67 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         }
 
         return batchBalances;
+    }
+
+    /**
+     * @dev Returns true if `attrId` is approved to token `to` from token `from`.
+     */
+    function isApproved(
+        uint256 from,
+        uint256 to,
+        uint256 attrId
+    ) public view virtual returns (bool) {
+        return _allowances[attrId][from] == to;
+    }
+
+    /**
+     * @dev Approve attribute type `attrId` of token `from` to token `to` called by `from` holder.
+     *
+     * Emits an {AttributeApproval} event.
+     */
+    function approve(
+        uint256 from,
+        uint256 to,
+        uint256 attrId
+    ) public virtual override {
+        require(from != 0, "ERC3664: approve from the zero address");
+        require(to != 0, "ERC3664: approve to the zero address");
+        require(
+            !_hasAttr(to, attrId),
+            "ERC3664: recipient token has already attached the attribute"
+        );
+
+        _allowances[attrId][from] = to;
+
+        emit AttributeApproval(_msgSender(), from, to, attrId);
+    }
+
+    /**
+     * @dev See {IERC3664Transferable-transferFrom}.
+     */
+    function transferFrom(
+        uint256 from,
+        uint256 to,
+        uint256 attrId
+    ) public virtual override {
+        require(
+            isApproved(from, to, attrId),
+            "ERC3664: nft holder not approve the attribute to recipient"
+        );
+        require(
+            !_hasAttr(to, attrId),
+            "ERC3664: recipient has attached the attribute"
+        );
+
+        address operator = _msgSender();
+        uint256 amount = attrBalances[attrId][from];
+        _beforeAttrTransfer(operator, from, to, attrId, amount, "");
+
+        attrBalances[attrId][to] = amount;
+        delete attrBalances[attrId][from];
+        delete _allowances[attrId][from];
+
+        emit TransferSingle(operator, from, to, attrId, amount);
     }
 
     /**
