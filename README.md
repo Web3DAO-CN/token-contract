@@ -1,4 +1,4 @@
-# DRepublic Contracts
+# Web3DAO@CN Token Contract
 
 ## Install
 ```
