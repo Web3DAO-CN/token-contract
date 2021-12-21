@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./EIP3664/ERC3664.sol";
@@ -11,7 +10,6 @@ import "./EIP3664/ERC3664.sol";
 contract Web3DAOCN is
     ERC3664,
     ERC721Enumerable,
-    ReentrancyGuard,
     AccessControlEnumerable
 {
     using Counters for Counters.Counter;
