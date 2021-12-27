@@ -7,11 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./EIP3664/ERC3664.sol";
 
-contract Web3DAOCN is
-    ERC3664,
-    ERC721Enumerable,
-    AccessControlEnumerable
-{
+contract Web3DAOCN is ERC3664, ERC721Enumerable, AccessControlEnumerable {
     using Counters for Counters.Counter;
     /// @dev tokenID
     Counters.Counter private _tokenIdTracker;
@@ -152,9 +148,24 @@ contract Web3DAOCN is
     function approve(
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
     ) public virtual override onlyHolder(from) {
-        super.approve(from, to, attrId);
+        super.approve(from, to, attrId, amount);
+    }
+
+    /**
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     */
+    function transfer(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public virtual override onlyHolder(from) {
+        super.transfer(from, to, attrId, amount);
     }
 
     /**

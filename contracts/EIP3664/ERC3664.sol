@@ -27,8 +27,10 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     mapping(uint256 => mapping(uint256 => uint256)) public attrBalances;
     // tokenId => primary attribute Id
     mapping(uint256 => uint256) private _primaryAttrs;
-    // attribute ID => from token ID => to token ID
-    mapping(uint256 => mapping(uint256 => uint256)) private _allowances;
+    // keccak256(attribute ID, from token ID) => to token ID => amount
+    mapping(bytes32 => mapping(uint256 => uint256)) private _allowances;
+    // totalSupply attribute ID => totalSupply
+    mapping(uint256 => uint256) public _totalSupply;
 
     constructor(string memory uri_) {
         _setURI(uri_);
@@ -192,14 +194,31 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     }
 
     /**
-     * @dev Returns true if `attrId` is approved to token `to` from token `from`.
+     * @dev Returns the remaining number of attribute that `spender` will be
+     * allowed to spend on behalf of `owner` through {transferFrom}. This is
+     * zero by default.
+     *
+     * This value changes when {approve} or {transferFrom} are called.
      */
-    function isApproved(
+    function allowance(
         uint256 from,
         uint256 to,
         uint256 attrId
-    ) public view virtual override returns (bool) {
-        return _allowances[attrId][from] == to;
+    ) public view virtual override returns (uint256) {
+        return _allowances[keccak256(abi.encodePacked(attrId, from))][to];
+    }
+
+    /**
+     * @dev Returns the amount of attribute in existence.
+     */
+    function totalSupply(uint256 attrId)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        return _totalSupply[attrId];
     }
 
     /**
@@ -210,19 +229,31 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     function approve(
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
     ) public virtual override {
-        require(from != 0, "ERC3664: approve from the zero address");
-        require(to != 0, "ERC3664: approve to the zero address");
-        require(
-            !_hasAttr(to, attrId),
-            "ERC3664: recipient token has already attached the attribute"
-        );
+        require(from != 0, "ERC3664: approve from the zero ");
+        require(to != 0, "ERC3664: approve to the zero ");
+        _allowances[keccak256(abi.encodePacked(attrId, from))][to] = amount;
 
-        _allowances[attrId][from] = to;
-
-        emit AttributeApproval(_msgSender(), from, to, attrId);
+        emit AttributeApproval(_msgSender(), from, to, attrId, amount);
     }
+
+    /**
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     */
+    function transfer(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public virtual override {
+        address operator = _msgSender();
+        _transfer(operator, from, to, attrId, amount);
+    }
+
 
     /**
      * @dev Transfers attribute type `attrId` from token type `from` to `to`.
@@ -232,25 +263,51 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     function transferFrom(
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
     ) public virtual override {
-        require(
-            isApproved(from, to, attrId),
-            "ERC3664: nft holder not approve the attribute to recipient"
-        );
-        require(
-            !_hasAttr(to, attrId),
-            "ERC3664: recipient has attached the attribute"
-        );
-
         address operator = _msgSender();
-        uint256 amount = attrBalances[attrId][from];
+        _transfer(operator, from, to, attrId, amount);
+
+        uint256 currentAllowance = _allowances[
+            keccak256(abi.encodePacked(attrId, from))
+        ][to];
+        require(
+            currentAllowance >= amount,
+            "ERC3664: transfer amount exceeds allowance"
+        );
+        unchecked {
+            _allowances[keccak256(abi.encodePacked(attrId, from))][to] =
+                currentAllowance -
+                amount;
+        }
+    }
+
+    /**
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     */
+    function _transfer(
+        address operator,
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public virtual {
+        require(from != 0, "ERC3664: transfer from the zero ");
+        require(to != 0, "ERC3664: transfer to the zero ");
         _beforeAttrTransfer(operator, from, to, attrId, amount, "");
 
-        attrBalances[attrId][to] = amount;
-        delete attrBalances[attrId][from];
-        delete _allowances[attrId][from];
-
+        uint256 senderBalance = attrBalances[attrId][from];
+        require(
+            senderBalance >= amount,
+            "ERC3664: transfer amount exceeds balance"
+        );
+        unchecked {
+            attrBalances[attrId][from] = senderBalance - amount;
+        }
+        attrBalances[attrId][to] += amount;
         emit TransferSingle(operator, from, to, attrId, amount);
     }
 
@@ -317,14 +374,9 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         uint256 amount
     ) internal virtual {
         require(_attrExists(attrId), "ERC3664: mint for nonexistent attribute");
-        require(
-            _hasAttr(tokenId, attrId),
-            "ERC3664: token has not attached the attribute"
-        );
-
         address operator = _msgSender();
         _beforeAttrTransfer(operator, 0, tokenId, attrId, amount, "");
-
+        _totalSupply[attrId] += amount;
         attrBalances[attrId][tokenId] += amount;
 
         emit TransferSingle(operator, 0, tokenId, attrId, amount);
@@ -354,6 +406,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 amounts[i],
                 ""
             );
+            _totalSupply[attrIds[i]] += amounts[i];
             attrBalances[attrIds[i]][tokenId] += amounts[i];
         }
 
@@ -383,6 +436,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
             "ERC3664: insufficient balance for transfer"
         );
         attrBalances[attrId][tokenId] = tokenBalance - amount;
+        _totalSupply[attrId] -= amount;
 
         emit TransferSingle(operator, tokenId, 0, attrId, amount);
     }
@@ -417,6 +471,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 "ERC3664: insufficient balance for transfer"
             );
             attrBalances[attrIds[i]][tokenId] = tokenBalance - amounts[i];
+            _totalSupply[attrIds[i]] -= amounts[i];
         }
 
         emit TransferBatch(operator, tokenId, 0, attrIds, amounts);
@@ -467,13 +522,5 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         returns (bool)
     {
         return attrBalances[attrId][tokenId] > 0;
-    }
-
-    function _removeByValue(uint256[] storage values, uint256 value) internal {
-        uint256 i = 0;
-        while (values[i] != value) {
-            i++;
-        }
-        delete values[i];
     }
 }

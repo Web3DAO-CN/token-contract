@@ -48,7 +48,8 @@ interface IERC3664 is IERC165 {
         address indexed operator,
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
     );
 
     /**
@@ -83,11 +84,16 @@ interface IERC3664 is IERC165 {
     /**
      * @dev Returns true if `attrId` is approved to token `to` from token `from`.
      */
-    function isApproved(
+    function allowance(
         uint256 from,
         uint256 to,
         uint256 attrId
-    ) external view returns (bool);
+    ) external view returns (uint256);
+
+    /**
+     * @dev Returns the amount of attribute in existence.
+     */
+    function totalSupply(uint256 attrId) external view returns (uint256);
 
     /**
      * @dev Approve attribute type `attrId` of token `from` to token `to` called by `from` holder.
@@ -97,7 +103,20 @@ interface IERC3664 is IERC165 {
     function approve(
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
+    ) external;
+
+    /**
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     */
+    function transfer(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
     ) external;
 
     /**
@@ -108,6 +127,7 @@ interface IERC3664 is IERC165 {
     function transferFrom(
         uint256 from,
         uint256 to,
-        uint256 attrId
+        uint256 attrId,
+        uint256 amount
     ) external;
 }
