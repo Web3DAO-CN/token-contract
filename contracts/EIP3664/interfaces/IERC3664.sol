@@ -15,6 +15,7 @@ interface IERC3664 is IERC165 {
         uint256 indexed attrId,
         string name,
         string symbol,
+        uint8 _decimal,
         string uri
     );
 
@@ -24,9 +25,9 @@ interface IERC3664 is IERC165 {
      */
     event TransferSingle(
         address indexed operator,
-        uint256 from,
-        uint256 to,
-        uint256 indexed attrId,
+        uint256 indexed from,
+        uint256 indexed to,
+        uint256 attrId,
         uint256 value
     );
 
@@ -35,9 +36,9 @@ interface IERC3664 is IERC165 {
      */
     event TransferBatch(
         address indexed operator,
-        uint256 from,
-        uint256 to,
-        uint256[] indexed attrIds,
+        uint256 indexed from,
+        uint256 indexed to,
+        uint256[] attrIds,
         uint256[] values
     );
 
@@ -51,14 +52,6 @@ interface IERC3664 is IERC165 {
         uint256 attrId,
         uint256 amount
     );
-
-    /**
-     * @dev Returns primary attribute type of owned by `tokenId`.
-     */
-    function primaryAttributeOf(uint256 tokenId)
-        external
-        view
-        returns (uint256);
 
     /**
      * @dev Returns the attribute type `attrId` value owned by `tokenId`.
@@ -75,11 +68,6 @@ interface IERC3664 is IERC165 {
         external
         view
         returns (uint256[] memory);
-
-    /**
-     * @dev Set primary attribute type of owned by `tokenId`.
-     */
-    function setPrimaryAttribute(uint256 tokenId, uint256 attrId) external;
 
     /**
      * @dev Returns true if `attrId` is approved to token `to` from token `from`.

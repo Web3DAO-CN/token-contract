@@ -63,6 +63,12 @@
         },
         {
           "indexed": false,
+          "internalType": "uint8",
+          "name": "_decimal",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
           "internalType": "string",
           "name": "uri",
           "type": "string"
@@ -81,19 +87,19 @@
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
           "name": "from",
           "type": "uint256"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
           "name": "to",
           "type": "uint256"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "internalType": "uint256[]",
           "name": "attrIds",
           "type": "uint256[]"
@@ -118,19 +124,19 @@
           "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
           "name": "from",
           "type": "uint256"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
           "name": "to",
           "type": "uint256"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "internalType": "uint256",
           "name": "attrId",
           "type": "uint256"
@@ -305,43 +311,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "primaryAttributeOf",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "attrId",
-          "type": "uint256"
-        }
-      ],
-      "name": "setPrimaryAttribute",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

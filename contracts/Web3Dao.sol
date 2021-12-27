@@ -3,28 +3,42 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./EIP3664/ERC3664.sol";
 
-contract Web3DAOCN is ERC3664, ERC721Enumerable, AccessControlEnumerable {
+contract Web3DAOCN is
+    ERC3664,
+    ERC721Enumerable,
+    AccessControlEnumerable,
+    EIP712("WEB3DAO@CN", "1.0")
+{
     using Counters for Counters.Counter;
     /// @dev tokenID
     Counters.Counter private _tokenIdTracker;
     /// @dev constant bytes
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    // solhint-disable-next-line var-name-mixedcase
+    bytes32 internal constant _PERMIT_TYPEHASH =
+        keccak256(
+            "approve(uint256 from,uint256 to,uint256 attrId,uint256 amount)"
+        );
+
     /// @dev Attr transfer is allow
     mapping(uint256 => bool) public attrTransferAllow;
 
     /// @dev userAddress => bool, same address can only be claim once
     mapping(address => bool) private _claimed;
+    /// @dev event attrTransferAllow
+    event AttrTransferAllow(uint256 attrId, bool allow);
 
     constructor(string memory uri_)
         ERC3664(uri_)
         ERC721("Web3 DAO CN NFT", unicode"WEB³")
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         _setupRole(MINTER_ROLE, _msgSender());
     }
 
@@ -57,7 +71,7 @@ contract Web3DAOCN is ERC3664, ERC721Enumerable, AccessControlEnumerable {
      */
     function mint(address to) public virtual onlyMinter {
         _tokenIdTracker.increment();
-        _mint(to, _tokenIdTracker.current());
+        _safeMint(to, _tokenIdTracker.current());
     }
 
     function setAttrTransferAllow(uint256 attrId, bool allow)
@@ -66,6 +80,7 @@ contract Web3DAOCN is ERC3664, ERC721Enumerable, AccessControlEnumerable {
         onlyMinter
     {
         attrTransferAllow[attrId] = allow;
+        emit AttrTransferAllow(attrId, allow);
     }
 
     /**
@@ -166,6 +181,32 @@ contract Web3DAOCN is ERC3664, ERC721Enumerable, AccessControlEnumerable {
         uint256 amount
     ) public virtual override onlyHolder(from) {
         super.transfer(from, to, attrId, amount);
+    }
+
+    /**
+     * @dev Sets a new URI for all attribute types
+     */
+    function setURI(string memory newuri) public onlyMinter {
+        _setURI(newuri);
+    }
+
+    /**
+     * @dev permit
+     */
+    function permit(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount,
+        bytes memory signature
+    ) public {
+        bytes32 structHash = keccak256(
+            abi.encode(_PERMIT_TYPEHASH, from, to, attrId, amount)
+        );
+        bytes32 hash = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(hash, signature);
+        require(ownerOf(from) == signer, "Permit: invalid signature");
+        _approve(from, to, attrId, amount);
     }
 
     /**

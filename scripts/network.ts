@@ -138,7 +138,7 @@ export const RPCS = {
   maticmain: {
     url: `https://rpc-mainnet.maticvigil.com`,
     chainId: 137,
-    gasPrice: 5000000000,
+    gasPrice: 30000000000,
     accounts: {
       mnemonic: process.env.MNEMONIC,
     },
@@ -146,7 +146,7 @@ export const RPCS = {
   matictest: {
     url: `https://rpc-mumbai.maticvigil.com`,
     chainId: 80001,
-    gasPrice: 1000000000,
+    gasPrice: 50000000000,
     accounts: {
       mnemonic: process.env.MNEMONIC,
     },

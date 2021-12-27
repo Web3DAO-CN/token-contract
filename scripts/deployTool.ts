@@ -1,5 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "fs";
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, constants, BigNumber } from "ethers";
+import { HardhatEthersHelpers } from "@nomiclabs/hardhat-ethers/types";
+import { Libraries } from "hardhat/types";
 
 export const allowVerifyChain = [
   "mainnet",
@@ -30,28 +32,30 @@ export function compileSetting(version: string, runs: number) {
     },
   };
 }
+export const overrides: any = {
+  gasLimit: 8000000,
+  nonce: BigNumber.from(0),
+};
 
 export async function deployContract(
+  ethers: HardhatEthersHelpers,
   name: string,
   network: string,
-  getContractFactory: Function,
   signer: Signer,
   args: Array<any> = [],
-  libraries: Object = {}
+  libraries: Libraries = {}
 ): Promise<Contract> {
-  const factory = await getContractFactory(name, {
-    signer: signer,
-    libraries: libraries,
-  });
-  const contract = await factory.deploy(...args);
-  console.log("Deploying", name);
-  console.log("  to", contract.address);
-  console.log("  in", contract.deployTransaction.hash);
-  console.log("  receipt", await contract.deployTransaction.wait());
-  await saveFile(network, name, contract,args,libraries);
-  return contract.deployed();
+    const factory = await ethers.getContractFactory(name, {
+      signer: signer,
+      libraries: libraries,
+    });
+    const contract = await factory.deploy(...args, overrides);
+    console.log("Deploying:", name.white);
+    console.log("  to", contract.address.white);
+    console.log("  in", contract.deployTransaction.hash.white);
+    await saveFile(network, name, contract, args, libraries);
+    return contract.deployed();
 }
-
 export function getContract(network: string, name: string) {
   const nameArr = name.split(":");
   const contractName = nameArr.length > 1 ? nameArr[1] : nameArr[0];
@@ -78,19 +82,25 @@ export async function saveFile(
   const file = `${contractName}.json`;
 
   mkdirSync(path, { recursive: true });
-  
+
   if (contractName != name) {
-    writeFileSync(path + file, JSON.stringify({
-      address: contract.address,
-      constructorArguments: args,
-      libraries:libraries,
-      contract:name
-    }));
-  }else{
-    writeFileSync(path + file, JSON.stringify({
-      address: contract.address,
-      constructorArguments: args,
-      libraries:libraries
-    }));
+    writeFileSync(
+      path + file,
+      JSON.stringify({
+        address: contract.address,
+        constructorArguments: args,
+        libraries: libraries,
+        contract: name,
+      })
+    );
+  } else {
+    writeFileSync(
+      path + file,
+      JSON.stringify({
+        address: contract.address,
+        constructorArguments: args,
+        libraries: libraries,
+      })
+    );
   }
 }

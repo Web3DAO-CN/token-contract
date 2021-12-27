@@ -25,8 +25,6 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     mapping(uint256 => AttrMetadata) private _attrMetadatas;
     // attrId => tokenId => amount
     mapping(uint256 => mapping(uint256 => uint256)) public attrBalances;
-    // tokenId => primary attribute Id
-    mapping(uint256 => uint256) private _primaryAttrs;
     // keccak256(attribute ID, from token ID) => to token ID => amount
     mapping(bytes32 => mapping(uint256 => uint256)) private _allowances;
     // totalSupply attribute ID => totalSupply
@@ -133,35 +131,6 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     }
 
     /**
-     * @dev See {IERC3664-primaryAttributeOf}.
-     */
-    function primaryAttributeOf(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _primaryAttrs[tokenId];
-    }
-
-    /**
-     * @dev See {IERC3664-setPrimaryAttribute}.
-     */
-    function setPrimaryAttribute(uint256 tokenId, uint256 attrId)
-        public
-        virtual
-        override
-    {
-        require(
-            _hasAttr(tokenId, attrId),
-            "ERC3664: token has not attached the attribute"
-        );
-
-        _primaryAttrs[tokenId] = attrId;
-    }
-
-    /**
      * @dev See {IERC3664-balanceOf}.
      */
     function balanceOf(uint256 tokenId, uint256 attrId)
@@ -232,6 +201,20 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         uint256 attrId,
         uint256 amount
     ) public virtual override {
+        _approve(from, to, attrId, amount);
+    }
+
+    /**
+     * @dev Approve attribute type `attrId` of token `from` to token `to` called by `from` holder.
+     *
+     * Emits an {AttributeApproval} event.
+     */
+    function _approve(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) internal virtual {
         require(from != 0, "ERC3664: approve from the zero ");
         require(to != 0, "ERC3664: approve to the zero ");
         _allowances[keccak256(abi.encodePacked(attrId, from))][to] = amount;
@@ -253,7 +236,6 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         address operator = _msgSender();
         _transfer(operator, from, to, attrId, amount);
     }
-
 
     /**
      * @dev Transfers attribute type `attrId` from token type `from` to `to`.
@@ -334,7 +316,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         );
         _attrMetadatas[attrId] = data;
 
-        emit AttributeCreated(attrId, _name, _symbol, _uri);
+        emit AttributeCreated(attrId, _name, _symbol, _decimal, _uri);
     }
 
     /**
