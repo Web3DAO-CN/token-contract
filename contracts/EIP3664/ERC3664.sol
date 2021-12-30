@@ -28,7 +28,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     // keccak256(attribute ID, from token ID) => to token ID => amount
     mapping(bytes32 => mapping(uint256 => uint256)) private _allowances;
     // totalSupply attribute ID => totalSupply
-    mapping(uint256 => uint256) public _totalSupply;
+    mapping(uint256 => uint256) private _totalSupply;
 
     constructor(string memory uri_) {
         _setURI(uri_);
@@ -404,10 +404,6 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         uint256 amount
     ) internal virtual {
         require(_attrExists(attrId), "ERC3664: burn for nonexistent attribute");
-        require(
-            _hasAttr(tokenId, attrId),
-            "ERC3664: token has not attached the attribute"
-        );
 
         address operator = _msgSender();
         _beforeAttrTransfer(operator, tokenId, 0, attrId, amount, "");
@@ -496,13 +492,5 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
      */
     function _attrExists(uint256 attrId) internal view returns (bool) {
         return _attrMetadatas[attrId].exist;
-    }
-
-    function _hasAttr(uint256 tokenId, uint256 attrId)
-        internal
-        view
-        returns (bool)
-    {
-        return attrBalances[attrId][tokenId] > 0;
     }
 }

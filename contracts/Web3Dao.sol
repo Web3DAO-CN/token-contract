@@ -29,8 +29,6 @@ contract Web3DAOCN is
     /// @dev Attr transfer is allow
     mapping(uint256 => bool) public attrTransferAllow;
 
-    /// @dev userAddress => bool, same address can only be claim once
-    mapping(address => bool) private _claimed;
     /// @dev event attrTransferAllow
     event AttrTransferAllow(uint256 attrId, bool allow);
 

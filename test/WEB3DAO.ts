@@ -31,10 +31,10 @@ describe("deploy Token", () => {
     decimals = [18, 18, 18, 18];
     uris = ["", "", "", ""];
     amounts = [
-      expandTo18Decimals(100000),
-      expandTo18Decimals(100000),
-      expandTo18Decimals(100000),
-      expandTo18Decimals(100000),
+      expandTo18Decimals(1),
+      expandTo18Decimals(10),
+      expandTo18Decimals(100),
+      expandTo18Decimals(1000),
     ];
   });
   it("verify admin", async () => {
@@ -99,11 +99,7 @@ describe("deploy Token", () => {
   it("mint attr", async () => {
     receipt = await token
       .connect(minter)
-      ["mint(uint256,uint256,uint256)"](
-        BN(1),
-        attrIds[0],
-        expandTo18Decimals(100000)
-      );
+      ["mint(uint256,uint256,uint256)"](BN(1), attrIds[0], amounts[0]);
     expect(receipt)
       .to.emit(token, "TransferSingle")
       .withArgs(
@@ -111,8 +107,26 @@ describe("deploy Token", () => {
         constants.AddressZero,
         BN(1),
         attrIds[0],
-        expandTo18Decimals(100000)
+        amounts[0]
       );
+  });
+  it("balanceOf attr", async () => {
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[0])).to.eq(
+      amounts[0]
+    );
+  });
+  it("burn attr", async () => {
+    receipt = await token
+      .connect(minter)
+      ["burn(uint256,uint256,uint256)"](BN(1), attrIds[0], amounts[0]);
+    expect(receipt)
+      .to.emit(token, "TransferSingle")
+      .withArgs(minter.address, BN(1), BN(0), attrIds[0], amounts[0]);
+  });
+  it("balanceOf attr", async () => {
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[0])).to.eq(
+      BN(0)
+    );
   });
   it("mintBatch attr", async () => {
     receipt = await token
@@ -132,27 +146,45 @@ describe("deploy Token", () => {
         [amounts[0], amounts[1]]
       );
   });
+  it("balanceOf attr", async () => {
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[0])).to.eq(
+      amounts[0]
+    );
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[1])).to.eq(
+      amounts[1]
+    );
+  });
   it("burnBatch attr", async () => {
     receipt = await token
       .connect(minter)
       ["burnBatch(uint256,uint256[],uint256[])"](
         BN(1),
-        [attrIds[0]],
-        [amounts[0]]
+        [attrIds[0], attrIds[1]],
+        [amounts[0], amounts[1]]
       );
     expect(receipt)
       .to.emit(token, "TransferBatch")
-      .withArgs(minter.address, BN(1), BN(0), [attrIds[0]], [amounts[0]]);
+      .withArgs(
+        minter.address,
+        BN(1),
+        BN(0),
+        [attrIds[0], attrIds[1]],
+        [amounts[0], amounts[1]]
+      );
+  });
+  it("balanceOf attr", async () => {
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[0])).to.eq(
+      BN(0)
+    );
+    expect(await token["balanceOf(uint256,uint256)"](BN(1), attrIds[1])).to.eq(
+      BN(0)
+    );
   });
   it("burn attr error", async () => {
     await expect(
       token
         .connect(minter)
-        ["burn(uint256,uint256,uint256)"](
-          BN(1),
-          attrIds[1],
-          expandTo18Decimals(200000)
-        )
+        ["burn(uint256,uint256,uint256)"](BN(1), attrIds[1], amounts[1])
     ).to.be.revertedWith("ERC3664: insufficient balance for transfer");
   });
   it("approve", async () => {
@@ -185,6 +217,24 @@ describe("deploy Token", () => {
     expect(receipt)
       .to.emit(token, "Transfer")
       .withArgs(constants.AddressZero, tokenHolder.address, BN(2));
+  });
+  it("mintBatch attr", async () => {
+    receipt = await token
+      .connect(minter)
+      ["mintBatch(uint256,uint256[],uint256[])"](
+        BN(1),
+        [attrIds[0], attrIds[1]],
+        [amounts[0], amounts[1]]
+      );
+    expect(receipt)
+      .to.emit(token, "TransferBatch")
+      .withArgs(
+        minter.address,
+        BN(0),
+        BN(1),
+        [attrIds[0], attrIds[1]],
+        [amounts[0], amounts[1]]
+      );
   });
   it("transfer Attr", async () => {
     await expect(

@@ -21,6 +21,9 @@ export const allowVerifyChain = [
 
 type AddressMap = { [name: string]: string };
 
+export function BN(n: number): BigNumber {
+  return BigNumber.from(n);
+}
 export function compileSetting(version: string, runs: number) {
   return {
     version: version,
