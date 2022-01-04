@@ -24,7 +24,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     // attrId => metadata
     mapping(uint256 => AttrMetadata) private _attrMetadatas;
     // attrId => tokenId => amount
-    mapping(uint256 => mapping(uint256 => uint256)) public attrBalances;
+    mapping(uint256 => mapping(uint256 => uint256)) private _attrBalances;
     // keccak256(attribute ID, from token ID) => to token ID => amount
     mapping(bytes32 => mapping(uint256 => uint256)) private _allowances;
     // totalSupply attribute ID => totalSupply
@@ -140,7 +140,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         override
         returns (uint256)
     {
-        return attrBalances[attrId][tokenId];
+        return _attrBalances[attrId][tokenId];
     }
 
     /**
@@ -281,15 +281,15 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         require(to != 0, "ERC3664: transfer to the zero ");
         _beforeAttrTransfer(operator, from, to, attrId, amount, "");
 
-        uint256 senderBalance = attrBalances[attrId][from];
+        uint256 senderBalance = _attrBalances[attrId][from];
         require(
             senderBalance >= amount,
             "ERC3664: transfer amount exceeds balance"
         );
         unchecked {
-            attrBalances[attrId][from] = senderBalance - amount;
+            _attrBalances[attrId][from] = senderBalance - amount;
         }
-        attrBalances[attrId][to] += amount;
+        _attrBalances[attrId][to] += amount;
         emit TransferSingle(operator, from, to, attrId, amount);
     }
 
@@ -359,7 +359,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         address operator = _msgSender();
         _beforeAttrTransfer(operator, 0, tokenId, attrId, amount, "");
         _totalSupply[attrId] += amount;
-        attrBalances[attrId][tokenId] += amount;
+        _attrBalances[attrId][tokenId] += amount;
 
         emit TransferSingle(operator, 0, tokenId, attrId, amount);
     }
@@ -389,7 +389,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 ""
             );
             _totalSupply[attrIds[i]] += amounts[i];
-            attrBalances[attrIds[i]][tokenId] += amounts[i];
+            _attrBalances[attrIds[i]][tokenId] += amounts[i];
         }
 
         emit TransferBatch(operator, 0, tokenId, attrIds, amounts);
@@ -408,12 +408,12 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         address operator = _msgSender();
         _beforeAttrTransfer(operator, tokenId, 0, attrId, amount, "");
 
-        uint256 tokenBalance = attrBalances[attrId][tokenId];
+        uint256 tokenBalance = _attrBalances[attrId][tokenId];
         require(
             tokenBalance >= amount,
             "ERC3664: insufficient balance for transfer"
         );
-        attrBalances[attrId][tokenId] = tokenBalance - amount;
+        _attrBalances[attrId][tokenId] = tokenBalance - amount;
         _totalSupply[attrId] -= amount;
 
         emit TransferSingle(operator, tokenId, 0, attrId, amount);
@@ -443,12 +443,12 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 amounts[i],
                 ""
             );
-            uint256 tokenBalance = attrBalances[attrIds[i]][tokenId];
+            uint256 tokenBalance = _attrBalances[attrIds[i]][tokenId];
             require(
                 tokenBalance >= amounts[i],
                 "ERC3664: insufficient balance for transfer"
             );
-            attrBalances[attrIds[i]][tokenId] = tokenBalance - amounts[i];
+            _attrBalances[attrIds[i]][tokenId] = tokenBalance - amounts[i];
             _totalSupply[attrIds[i]] -= amounts[i];
         }
 
