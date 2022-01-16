@@ -9,6 +9,9 @@ interface IBuyNFT {
     /// @dev 设置NFT价格事件
     event SetPrice(uint256 _price);
 
+    /// @dev 设置DaoVault
+    event SetDaoVault(address _DaoVault);
+
     /// @dev NFT合约地址
     function WEB3DAONFT() external view returns (address);
 
@@ -33,4 +36,11 @@ interface IBuyNFT {
      * @notice 仅限owner调用
      */
     function setPrice(uint256 _price) external;
+
+    /**
+     * @dev 设置DaoVault合约地址
+     * @param _DaoVault 新合约地址
+     * @notice 仅限owner调用
+     */
+    function setDaoVault(address _DaoVault) external;
 }

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IWeb3DAOCN.sol";
 import "./interfaces/IBuyNFT.sol";
+import "./interfaces/IDaoVault.sol";
 
 /**
  * @title WEB3DAO@CN NFT销售合约
@@ -46,6 +47,8 @@ contract BuyNFT is Ownable, IBuyNFT {
                 price
             )
         );
+        // 存款
+        IDaoVault(DaoVault).deposit(price);
         // 铸造nft
         IWeb3DAOCN(WEB3DAONFT).mint(to);
         emit Buy(to);
@@ -55,5 +58,11 @@ contract BuyNFT is Ownable, IBuyNFT {
     function setPrice(uint256 _price) public override onlyOwner {
         price = _price;
         emit SetPrice(_price);
+    }
+
+    /// @dev See {IBuyNFT-setDaoVault}.
+    function setDaoVault(address _DaoVault) public override onlyOwner {
+        DaoVault = _DaoVault;
+        emit SetDaoVault(_DaoVault);
     }
 }

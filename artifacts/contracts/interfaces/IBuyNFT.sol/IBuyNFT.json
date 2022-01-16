@@ -21,6 +21,19 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "address",
+          "name": "_DaoVault",
+          "type": "address"
+        }
+      ],
+      "name": "SetDaoVault",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "_price",
           "type": "uint256"
@@ -92,6 +105,19 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_DaoVault",
+          "type": "address"
+        }
+      ],
+      "name": "setDaoVault",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
