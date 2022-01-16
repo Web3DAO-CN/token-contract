@@ -56,7 +56,11 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     }
 
     /// @dev See {IDaoSponsor-sponsor}.
-    function sponsor(uint256 tokenId, uint256 ethAmount) public onlyOwner {
+    function sponsor(uint256 tokenId, uint256 ethAmount)
+        public
+        override
+        onlyOwner
+    {
         // NFT合约的 sponsor attr总发行量
         uint256 sponsorTotalSupply = IERC3664(WEB3DAONFT).totalSupply(
             SPONSOR_ATTR_ID
@@ -90,6 +94,7 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     /// @dev See {IDaoSponsor-quit}.
     function quit(uint256 tokenId, uint256 sponsorAmount)
         public
+        override
         onlyOwner
         returns (uint256 quitAmount)
     {
@@ -122,6 +127,7 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     /// @dev See {IDaoSponsor-borrowGas}.
     function borrowGas(uint256 tokenId, uint256 gasAmount)
         public
+        override
         onlyOwner
         returns (bool)
     {
@@ -157,6 +163,7 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     /// @dev See {IDaoSponsor-returnGas}.
     function returnGas(uint256 tokenId, uint256 gasAmount)
         public
+        override
         onlyOwner
         returns (bool)
     {
@@ -177,19 +184,19 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     }
 
     /// @dev See {IDaoSponsor-setDaoVault}.
-    function setDaoVault(address _DaoVault) public onlyOwner {
+    function setDaoVault(address _DaoVault) public override onlyOwner {
         DaoVault = _DaoVault;
         emit SetDaoVault(_DaoVault);
     }
 
     /// @dev See {IDaoSponsor-setDaoTreasury}.
-    function setDaoTreasury(address _DaoTreasury) public onlyOwner {
+    function setDaoTreasury(address _DaoTreasury) public override onlyOwner {
         DaoTreasury = _DaoTreasury;
         emit SetDaoTreasury(_DaoTreasury);
     }
 
     /// @dev See {IDaoSponsor-setMaxBorrow}.
-    function setMaxBorrow(uint256 _maxBorrow) public onlyOwner {
+    function setMaxBorrow(uint256 _maxBorrow) public override onlyOwner {
         maxBorrow = _maxBorrow;
         emit SetMaxBorrow(_maxBorrow);
     }

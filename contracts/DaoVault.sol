@@ -18,9 +18,9 @@ import "./interfaces/IDaoVault.sol";
 contract DaoVault is Ownable, IDaoVault {
     using Address for address;
     /// @dev WETH合约地址
-    address public immutable WETH;
+    address public immutable override WETH;
     /// @dev 储备量balance
-    uint256 public reserve;
+    uint256 public override reserve;
 
     /**
      * @dev 构造函数
@@ -31,7 +31,7 @@ contract DaoVault is Ownable, IDaoVault {
     }
 
     /// @dev See {IDaoVault-deposit}.
-    function deposit(uint256 amount) public {
+    function deposit(uint256 amount) public override {
         require(
             IERC20(WETH).balanceOf(address(this)) >= reserve + amount,
             "DaoVault:no enough amount"
@@ -41,26 +41,21 @@ contract DaoVault is Ownable, IDaoVault {
     }
 
     /// @dev See {IDaoVault-withdraw}.
-    function withdraw(uint256 amount, address to) public onlyOwner {
+    function withdraw(uint256 amount, address to) public override onlyOwner {
         require(
             IERC20(WETH).balanceOf(address(this)) >= amount,
             "DaoVault:no enough balance"
         );
         // 发送weth
         WETH.functionCall(
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector,
-                address(this),
-                to,
-                amount
-            )
+            abi.encodeWithSelector(IERC20.transfer.selector, to, amount)
         );
         reserve -= amount;
         emit Withdraw(amount);
     }
 
     /// @dev See {IDaoVault-updateReserve}.
-    function updateReserve() public onlyOwner {
+    function updateReserve() public override onlyOwner {
         reserve = IERC20(WETH).balanceOf(address(this));
         emit UpdateReserve(reserve);
     }

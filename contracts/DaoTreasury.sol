@@ -148,7 +148,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
         // 计算收到的weth数量 = 销毁的gas数量 * (10000 - gas税) / (10000 * 10000)
         uint256 ethAmount = (gasAmount * (max - gasTax)) / (max * gasAttrPrice);
         // 将gas发送到合约持有的NFT
-        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transferFrom(
             tokenId,
             holdNFTId,
             GAS_ATTR_ID,
@@ -173,7 +173,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
         // DaoVault存款
         IDaoVault(DaoVault).deposit(ethAmount);
         // 将gas从合约持有NFT发送到目标NFT
-        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transferFrom(
             holdNFTId,
             tokenId,
             GAS_ATTR_ID,
@@ -194,7 +194,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
             "DaoTreasury: borrowGas error"
         );
         // 从当前合约持有的NFT发送gas
-        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transferFrom(
             holdNFTId,
             tokenId,
             GAS_ATTR_ID,
@@ -214,7 +214,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
             "DaoTreasury: returnGas error"
         );
         // 将gas从tokenId发送到当前合约持有的NFT
-        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transferFrom(
             tokenId,
             holdNFTId,
             GAS_ATTR_ID,

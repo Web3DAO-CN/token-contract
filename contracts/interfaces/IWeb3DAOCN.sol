@@ -63,22 +63,6 @@ interface IWeb3DAOCN {
         uint256[] memory amounts
     ) external;
 
-    /// @dev transfer
-    function transfer(
-        uint256 from,
-        uint256 to,
-        uint256 attrId,
-        uint256 amount
-    ) external;
-
-    /// @dev transferFrom
-    function transferFrom(
-        uint256 from,
-        uint256 to,
-        uint256 attrId,
-        uint256 amount
-    ) external;
-
     /// @dev Sets a new URI for all attribute types
     function setURI(string memory newuri) external;
 

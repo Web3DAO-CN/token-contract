@@ -29,7 +29,7 @@ contract Web3DAOCN is
         );
 
     /// @dev Attr transfer is allow
-    mapping(uint256 => bool) public attrTransferAllow;
+    mapping(uint256 => bool) public override attrTransferAllow;
 
     constructor(string memory uri_)
         ERC3664(uri_)
@@ -73,7 +73,7 @@ contract Web3DAOCN is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to) public onlyMinter {
+    function mint(address to) public override onlyMinter {
         _tokenIdTracker.increment();
         _safeMint(to, _tokenIdTracker.current());
     }
@@ -175,32 +175,9 @@ contract Web3DAOCN is
     }
 
     /**
-     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
-     *
-     * Emits a {TransferSingle} event.
-     */
-    function transfer(
-        uint256 from,
-        uint256 to,
-        uint256 attrId,
-        uint256 amount
-    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
-        super.transfer(from, to, attrId, amount);
-    }
-
-    function transferFrom(
-        uint256 from,
-        uint256 to,
-        uint256 attrId,
-        uint256 amount
-    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
-        super.transfer(from, to, attrId, amount);
-    }
-
-    /**
      * @dev Sets a new URI for all attribute types
      */
-    function setURI(string memory newuri) public onlyMinter {
+    function setURI(string memory newuri) public override onlyMinter {
         _setURI(newuri);
     }
 
@@ -261,7 +238,7 @@ contract Web3DAOCN is
         public
         view
         virtual
-        override(ERC3664, AccessControlEnumerable, ERC721)
+        override(AccessControlEnumerable, ERC3664, ERC721)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

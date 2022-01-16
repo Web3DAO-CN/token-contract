@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-
-// File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.4.1
-
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -999,200 +996,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {}
-}
-
-
-// File @openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol@v4.4.1
-
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Enumerable.sol)
-
-pragma solidity ^0.8.0;
-
-/**
- * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
- * @dev See https://eips.ethereum.org/EIPS/eip-721
- */
-interface IERC721Enumerable is IERC721 {
-    /**
-     * @dev Returns the total amount of tokens stored by the contract.
-     */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns a token ID owned by `owner` at a given `index` of its token list.
-     * Use along with {balanceOf} to enumerate all of ``owner``'s tokens.
-     */
-    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId);
-
-    /**
-     * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.
-     * Use along with {totalSupply} to enumerate all tokens.
-     */
-    function tokenByIndex(uint256 index) external view returns (uint256);
-}
-
-
-// File @openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol@v4.4.1
-
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/ERC721Enumerable.sol)
-
-pragma solidity ^0.8.0;
-
-
-/**
- * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
- * enumerability of all the token ids in the contract as well as all token ids owned by each
- * account.
- */
-abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
-    // Mapping from owner to list of owned token IDs
-    mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
-
-    // Mapping from token ID to index of the owner tokens list
-    mapping(uint256 => uint256) private _ownedTokensIndex;
-
-    // Array with all token ids, used for enumeration
-    uint256[] private _allTokens;
-
-    // Mapping from token id to position in the allTokens array
-    mapping(uint256 => uint256) private _allTokensIndex;
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC721) returns (bool) {
-        return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
-     */
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
-        require(index < ERC721.balanceOf(owner), "ERC721Enumerable: owner index out of bounds");
-        return _ownedTokens[owner][index];
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-totalSupply}.
-     */
-    function totalSupply() public view virtual override returns (uint256) {
-        return _allTokens.length;
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-tokenByIndex}.
-     */
-    function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
-        require(index < ERC721Enumerable.totalSupply(), "ERC721Enumerable: global index out of bounds");
-        return _allTokens[index];
-    }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual override {
-        super._beforeTokenTransfer(from, to, tokenId);
-
-        if (from == address(0)) {
-            _addTokenToAllTokensEnumeration(tokenId);
-        } else if (from != to) {
-            _removeTokenFromOwnerEnumeration(from, tokenId);
-        }
-        if (to == address(0)) {
-            _removeTokenFromAllTokensEnumeration(tokenId);
-        } else if (to != from) {
-            _addTokenToOwnerEnumeration(to, tokenId);
-        }
-    }
-
-    /**
-     * @dev Private function to add a token to this extension's ownership-tracking data structures.
-     * @param to address representing the new owner of the given token ID
-     * @param tokenId uint256 ID of the token to be added to the tokens list of the given address
-     */
-    function _addTokenToOwnerEnumeration(address to, uint256 tokenId) private {
-        uint256 length = ERC721.balanceOf(to);
-        _ownedTokens[to][length] = tokenId;
-        _ownedTokensIndex[tokenId] = length;
-    }
-
-    /**
-     * @dev Private function to add a token to this extension's token tracking data structures.
-     * @param tokenId uint256 ID of the token to be added to the tokens list
-     */
-    function _addTokenToAllTokensEnumeration(uint256 tokenId) private {
-        _allTokensIndex[tokenId] = _allTokens.length;
-        _allTokens.push(tokenId);
-    }
-
-    /**
-     * @dev Private function to remove a token from this extension's ownership-tracking data structures. Note that
-     * while the token is not assigned a new owner, the `_ownedTokensIndex` mapping is _not_ updated: this allows for
-     * gas optimizations e.g. when performing a transfer operation (avoiding double writes).
-     * This has O(1) time complexity, but alters the order of the _ownedTokens array.
-     * @param from address representing the previous owner of the given token ID
-     * @param tokenId uint256 ID of the token to be removed from the tokens list of the given address
-     */
-    function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
-        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
-
-        uint256 lastTokenIndex = ERC721.balanceOf(from) - 1;
-        uint256 tokenIndex = _ownedTokensIndex[tokenId];
-
-        // When the token to delete is the last token, the swap operation is unnecessary
-        if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = _ownedTokens[from][lastTokenIndex];
-
-            _ownedTokens[from][tokenIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
-            _ownedTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
-        }
-
-        // This also deletes the contents at the last position of the array
-        delete _ownedTokensIndex[tokenId];
-        delete _ownedTokens[from][lastTokenIndex];
-    }
-
-    /**
-     * @dev Private function to remove a token from this extension's token tracking data structures.
-     * This has O(1) time complexity, but alters the order of the _allTokens array.
-     * @param tokenId uint256 ID of the token to be removed from the tokens list
-     */
-    function _removeTokenFromAllTokensEnumeration(uint256 tokenId) private {
-        // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
-
-        uint256 lastTokenIndex = _allTokens.length - 1;
-        uint256 tokenIndex = _allTokensIndex[tokenId];
-
-        // When the token to delete is the last token, the swap operation is unnecessary. However, since this occurs so
-        // rarely (when the last minted token is burnt) that we still do the swap here to avoid the gas cost of adding
-        // an 'if' statement (like in _removeTokenFromOwnerEnumeration)
-        uint256 lastTokenId = _allTokens[lastTokenIndex];
-
-        _allTokens[tokenIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
-        _allTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
-
-        // This also deletes the contents at the last position of the array
-        delete _allTokensIndex[tokenId];
-        _allTokens.pop();
-    }
 }
 
 
@@ -2532,7 +2335,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     // attrId => metadata
     mapping(uint256 => AttrMetadata) private _attrMetadatas;
     // attrId => tokenId => amount
-    mapping(uint256 => mapping(uint256 => uint256)) public attrBalances;
+    mapping(uint256 => mapping(uint256 => uint256)) private _attrBalances;
     // keccak256(attribute ID, from token ID) => to token ID => amount
     mapping(bytes32 => mapping(uint256 => uint256)) private _allowances;
     // totalSupply attribute ID => totalSupply
@@ -2648,7 +2451,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         override
         returns (uint256)
     {
-        return attrBalances[attrId][tokenId];
+        return _attrBalances[attrId][tokenId];
     }
 
     /**
@@ -2789,15 +2592,15 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         require(to != 0, "ERC3664: transfer to the zero ");
         _beforeAttrTransfer(operator, from, to, attrId, amount, "");
 
-        uint256 senderBalance = attrBalances[attrId][from];
+        uint256 senderBalance = _attrBalances[attrId][from];
         require(
             senderBalance >= amount,
             "ERC3664: transfer amount exceeds balance"
         );
         unchecked {
-            attrBalances[attrId][from] = senderBalance - amount;
+            _attrBalances[attrId][from] = senderBalance - amount;
         }
-        attrBalances[attrId][to] += amount;
+        _attrBalances[attrId][to] += amount;
         emit TransferSingle(operator, from, to, attrId, amount);
     }
 
@@ -2867,7 +2670,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         address operator = _msgSender();
         _beforeAttrTransfer(operator, 0, tokenId, attrId, amount, "");
         _totalSupply[attrId] += amount;
-        attrBalances[attrId][tokenId] += amount;
+        _attrBalances[attrId][tokenId] += amount;
 
         emit TransferSingle(operator, 0, tokenId, attrId, amount);
     }
@@ -2897,7 +2700,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 ""
             );
             _totalSupply[attrIds[i]] += amounts[i];
-            attrBalances[attrIds[i]][tokenId] += amounts[i];
+            _attrBalances[attrIds[i]][tokenId] += amounts[i];
         }
 
         emit TransferBatch(operator, 0, tokenId, attrIds, amounts);
@@ -2916,12 +2719,12 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
         address operator = _msgSender();
         _beforeAttrTransfer(operator, tokenId, 0, attrId, amount, "");
 
-        uint256 tokenBalance = attrBalances[attrId][tokenId];
+        uint256 tokenBalance = _attrBalances[attrId][tokenId];
         require(
             tokenBalance >= amount,
             "ERC3664: insufficient balance for transfer"
         );
-        attrBalances[attrId][tokenId] = tokenBalance - amount;
+        _attrBalances[attrId][tokenId] = tokenBalance - amount;
         _totalSupply[attrId] -= amount;
 
         emit TransferSingle(operator, tokenId, 0, attrId, amount);
@@ -2951,12 +2754,12 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
                 amounts[i],
                 ""
             );
-            uint256 tokenBalance = attrBalances[attrIds[i]][tokenId];
+            uint256 tokenBalance = _attrBalances[attrIds[i]][tokenId];
             require(
                 tokenBalance >= amounts[i],
                 "ERC3664: insufficient balance for transfer"
             );
-            attrBalances[attrIds[i]][tokenId] = tokenBalance - amounts[i];
+            _attrBalances[attrIds[i]][tokenId] = tokenBalance - amounts[i];
             _totalSupply[attrIds[i]] -= amounts[i];
         }
 
@@ -3004,7 +2807,103 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
 }
 
 
-// File contracts/Web3Dao.sol
+// File contracts/interfaces/IWeb3DAOCN.sol
+
+
+pragma solidity ^0.8.0;
+
+interface IWeb3DAOCN {
+    /// @dev event attrTransferAllow
+    event AttrTransferAllow(uint256 attrId, bool allow);
+
+    function totalSupply() external view returns (uint256);
+
+    /// @dev return Attr transfer is allow by attrId
+    function attrTransferAllow(uint256 attrId) external view returns (bool);
+
+    /// @dev mint NFT token
+    function mint(address to) external;
+
+    /// @dev set attr transfer is allow by attrId
+    function setAttrTransferAllow(uint256 attrId, bool allow) external;
+
+    /// @dev create attrId
+    function create(
+        uint256 _attrId,
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimal,
+        string memory _uri
+    ) external;
+
+    /// @dev [Batched] version of {create}.
+    function createBatch(
+        uint256[] calldata attrIds,
+        string[] calldata names,
+        string[] calldata symbols,
+        uint8[] memory decimals,
+        string[] calldata uris
+    ) external;
+
+    /// @dev Mint `amount` value of attribute type `attrId` to `tokenId`.
+    function mint(
+        uint256 tokenId,
+        uint256 attrId,
+        uint256 amount
+    ) external;
+
+    /// @dev [Batched] version of {mint}.
+    function mintBatch(
+        uint256 tokenId,
+        uint256[] memory attrIds,
+        uint256[] memory amounts
+    ) external;
+
+    /// @dev Destroys `amount` values of attribute type `attrId` from `tokenId`
+    function burn(
+        uint256 tokenId,
+        uint256 attrId,
+        uint256 amount
+    ) external;
+
+    /// @dev [Batched] version of {burn}.
+    function burnBatch(
+        uint256 tokenId,
+        uint256[] memory attrIds,
+        uint256[] memory amounts
+    ) external;
+
+    /// @dev transfer
+    function transfer(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) external;
+
+    /// @dev transferFrom
+    function transferFrom(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) external;
+
+    /// @dev Sets a new URI for all attribute types
+    function setURI(string memory newuri) external;
+
+    /// @dev permit
+    function permit(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount,
+        bytes memory signature
+    ) external;
+}
+
+
+// File contracts/Web3DAOCN.sol
 
 
 pragma solidity ^0.8.0;
@@ -3013,11 +2912,13 @@ pragma solidity ^0.8.0;
 
 
 
+
 contract Web3DAOCN is
     ERC3664,
-    ERC721Enumerable,
+    ERC721,
     AccessControlEnumerable,
-    EIP712("WEB3DAO@CN", "1.0")
+    EIP712("WEB3DAO@CN", "1.0"),
+    IWeb3DAOCN
 {
     using Counters for Counters.Counter;
     /// @dev tokenID
@@ -3032,10 +2933,7 @@ contract Web3DAOCN is
         );
 
     /// @dev Attr transfer is allow
-    mapping(uint256 => bool) public attrTransferAllow;
-
-    /// @dev event attrTransferAllow
-    event AttrTransferAllow(uint256 attrId, bool allow);
+    mapping(uint256 => bool) public override attrTransferAllow;
 
     constructor(string memory uri_)
         ERC3664(uri_)
@@ -3062,6 +2960,13 @@ contract Web3DAOCN is
     }
 
     /**
+     * @dev See {IERC721Enumerable-totalSupply}.
+     */
+    function totalSupply() public view override returns (uint256) {
+        return _tokenIdTracker.current();
+    }
+
+    /**
      * @dev Creates a new token for `to`. Its token ID will be automatically
      * assigned (and available on the emitted {IERC721-Transfer} event), and the token
      * URI autogenerated based on the base URI passed at construction.
@@ -3072,14 +2977,15 @@ contract Web3DAOCN is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to) public virtual onlyMinter {
+    function mint(address to) public override onlyMinter {
         _tokenIdTracker.increment();
         _safeMint(to, _tokenIdTracker.current());
     }
 
+    /// @dev setAttrTransferAllow
     function setAttrTransferAllow(uint256 attrId, bool allow)
         public
-        virtual
+        override
         onlyMinter
     {
         attrTransferAllow[attrId] = allow;
@@ -3097,12 +3003,12 @@ contract Web3DAOCN is
         string memory _symbol,
         uint8 _decimal,
         string memory _uri
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _create(_attrId, _name, _symbol, _decimal, _uri);
     }
 
     /**
-     * @dev [Batched] version of {mint}.
+     * @dev [Batched] version of {create}.
      */
     function createBatch(
         uint256[] calldata attrIds,
@@ -3110,7 +3016,7 @@ contract Web3DAOCN is
         string[] calldata symbols,
         uint8[] memory decimals,
         string[] calldata uris
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _createBatch(attrIds, names, symbols, decimals, uris);
     }
 
@@ -3121,7 +3027,7 @@ contract Web3DAOCN is
         uint256 tokenId,
         uint256 attrId,
         uint256 amount
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _mint(tokenId, attrId, amount);
     }
 
@@ -3132,7 +3038,7 @@ contract Web3DAOCN is
         uint256 tokenId,
         uint256[] memory attrIds,
         uint256[] memory amounts
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _mintBatch(tokenId, attrIds, amounts);
     }
 
@@ -3143,7 +3049,7 @@ contract Web3DAOCN is
         uint256 tokenId,
         uint256 attrId,
         uint256 amount
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _burn(tokenId, attrId, amount);
     }
 
@@ -3154,7 +3060,7 @@ contract Web3DAOCN is
         uint256 tokenId,
         uint256[] memory attrIds,
         uint256[] memory amounts
-    ) public virtual onlyMinter {
+    ) public override onlyMinter {
         _burnBatch(tokenId, attrIds, amounts);
     }
 
@@ -3168,7 +3074,7 @@ contract Web3DAOCN is
         uint256 to,
         uint256 attrId,
         uint256 amount
-    ) public virtual override onlyHolder(from) {
+    ) public override onlyHolder(from) {
         super.approve(from, to, attrId, amount);
     }
 
@@ -3182,14 +3088,23 @@ contract Web3DAOCN is
         uint256 to,
         uint256 attrId,
         uint256 amount
-    ) public virtual override onlyHolder(from) {
+    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
+        super.transfer(from, to, attrId, amount);
+    }
+
+    function transferFrom(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
         super.transfer(from, to, attrId, amount);
     }
 
     /**
      * @dev Sets a new URI for all attribute types
      */
-    function setURI(string memory newuri) public onlyMinter {
+    function setURI(string memory newuri) public override onlyMinter {
         _setURI(newuri);
     }
 
@@ -3202,7 +3117,7 @@ contract Web3DAOCN is
         uint256 attrId,
         uint256 amount,
         bytes memory signature
-    ) public {
+    ) public override {
         bytes32 structHash = keccak256(
             abi.encode(_PERMIT_TYPEHASH, from, to, attrId, amount)
         );
@@ -3231,6 +3146,18 @@ contract Web3DAOCN is
         super._beforeAttrTransfer(operator, from, to, attrIds, amounts, data);
     }
 
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
+        require(
+            balanceOf(to) == 0,
+            "Web3DAOCN: Each address can only have one Token"
+        );
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -3238,7 +3165,7 @@ contract Web3DAOCN is
         public
         view
         virtual
-        override(ERC3664, AccessControlEnumerable, ERC721Enumerable)
+        override(ERC3664, AccessControlEnumerable, ERC721)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

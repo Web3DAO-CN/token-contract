@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "EIP712Base",
+  "sourceName": "contracts/test/MaticWETH.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getChainId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getDomainSeperator",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040526000805460ff19169055348015601957600080fd5b506095806100286000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806320379ee51460375780633408e47014604f575b600080fd5b603d6055565b60408051918252519081900360200190f35b603d605b565b60015490565b469056fea264697066735822122074c144d778aba9e57479dc5a33abad8d16f297a22f695c604d387e52a2672cb164736f6c63430006060033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806320379ee51460375780633408e47014604f575b600080fd5b603d6055565b60408051918252519081900360200190f35b603d605b565b60015490565b469056fea264697066735822122074c144d778aba9e57479dc5a33abad8d16f297a22f695c604d387e52a2672cb164736f6c63430006060033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
