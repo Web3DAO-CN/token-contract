@@ -4,8 +4,12 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./EIP3664/interfaces/IERC3664.sol";
-import "./IWeb3Dao.sol";
+import "./interfaces/IWeb3DAOCN.sol";
+import "./interfaces/IDaoVault.sol";
+import "./interfaces/IDaoSponsor.sol";
+import "./interfaces/IDaoTreasury.sol";
 import "./MultiSign.sol";
 
 /**
@@ -14,27 +18,46 @@ import "./MultiSign.sol";
  *         1. 赞助商赞助ETH池,有锁仓时间,退出时根据赞助占比和ETH池体量计算收益
  *         2. 发行Gas积分,按照ETH池子数量在最大债务比例下发行
  *         3. 兑换门票,收到的ETH存入合约
- *         4. 交换Gas积分,DAO NFT持有者可以使用ETH任意兑换Gas积分
+ *         4. 偿还债务,归还eth,同时更新债务数据,如果归还0eth,则只更新债务数据
+ *         5. 销毁gas,系统将多余的gas销毁
+ *         6. 出售gas,向合约出售gas,换回合约中的eth,同时扣除税务
+ *         7. 购买gas,用户使用eth向合约购买gas,合约将持有的gas出售给用户
+ *         8. 设置最大债务比例,gas和eth兑换比例,gas税
  */
-contract DaoTreasury is MultiSign {
-    address public immutable WEB3DAONFT;
-    address public immutable WETH;
-    uint256 public immutable SPONSOR_ATTR_ID;
-    uint256 public immutable GAS_ATTR_ID;
-    uint256 public gasAttrPrice = 10000;
-    uint256 public constant max = 10000;
-    /// @dev balance + debt
-    uint256 public reserve;
-    uint256 public price;
-    uint256 public debt;
-    uint256 public maxDebt = 5000;
-    mapping(uint256 => LockVault) public lockVault;
+contract DaoTreasury is MultiSign, IDaoTreasury {
+    using Address for address;
+    /// @dev NFT合约地址
+    address public immutable override WEB3DAONFT;
+    /// @dev WETH合约地址
+    address public immutable override WETH;
+    /// @dev DaoVault
+    address public override DaoVault;
+    /// @dev DaoSponsor
+    address public override DaoSponsor;
+    /// @dev NFT合约中Sponsor attrId
+    uint256 public immutable override SPONSOR_ATTR_ID;
+    /// @dev NFT合约中Gas attrId
+    uint256 public immutable override GAS_ATTR_ID;
+    /// @dev gas属性值和eth兑换比例Gas:ETH 10000:1
+    uint256 public override gasAttrPrice = 10000;
+    /// @dev 除数
+    uint256 public constant override max = 10000;
+    /// @dev 债务数量
+    uint256 public override debt;
+    /// @dev 最大债务上限
+    uint256 public override maxDebt = 5000;
+    /// @dev gas出售税 1%
+    uint256 public override gasTax = 100;
+    /// @dev 合约持有的NFT tokenId
+    uint256 public override holdNFTId;
 
-    struct LockVault {
-        uint256 amount;
-        uint256 time;
-    }
-
+    /**
+     * @dev 构造函数
+     * @param _WEB3DAONFT NFT合约地址
+     * @param _WETH WETH合约地址
+     * @param _SPONSOR_ATTR_ID NFT合约中Sponsor attrId
+     * @param _GAS_ATTR_ID NFT合约中Gas attrId
+     */
     constructor(
         address _WEB3DAONFT,
         address _WETH,
@@ -47,6 +70,7 @@ contract DaoTreasury is MultiSign {
         GAS_ATTR_ID = _GAS_ATTR_ID;
     }
 
+    /// @dev 仅限NFT tokenId持有者
     modifier onlyHolder(uint256 tokenId) {
         require(
             IERC721(WEB3DAONFT).ownerOf(tokenId) == msg.sender,
@@ -55,138 +79,209 @@ contract DaoTreasury is MultiSign {
         _;
     }
 
-    /// @dev 购买门票
-    function buy(address to) public {
-        IERC20(WETH).transferFrom(msg.sender, address(this), price);
-        reserve += price;
-        IWeb3DAOCN(WEB3DAONFT).mint(to);
-    }
-
-    /// @dev 赞助,锁定期1年
-    function sponsor(uint256 tokenId, uint256 amount) public {
-        uint256 balance = IERC20(WETH).balanceOf(address(this));
-        uint256 sponsorTotalSupply = IERC3664(WEB3DAONFT).totalSupply(
-            SPONSOR_ATTR_ID
+    /// @dev See {IDaoTreasury-sponsor}.
+    function sponsor(uint256 tokenId, uint256 ethAmount) public override {
+        // 发送weth到DaoVault
+        WETH.functionCall(
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector,
+                msg.sender,
+                DaoVault,
+                ethAmount
+            )
         );
-        uint256 sponsorAmount;
-        if (sponsorTotalSupply == 0 || balance + debt == 0) {
-            sponsorAmount = amount;
-        } else {
-            sponsorAmount = (amount * sponsorTotalSupply) / (balance + debt);
-        }
-        reserve += amount;
-        LockVault storage la = lockVault[tokenId];
-        la.amount += sponsorAmount;
-        la.time = block.timestamp + 365 days;
-        IWeb3DAOCN(WEB3DAONFT).mint(tokenId, SPONSOR_ATTR_ID, sponsorAmount);
-        IERC20(WETH).transferFrom(msg.sender, address(this), amount);
+        IDaoVault(DaoVault).deposit(ethAmount);
+        IDaoSponsor(DaoSponsor).sponsor(tokenId, ethAmount);
     }
 
-    /// @dev 退出赞助
+    /// @dev See {IDaoTreasury-quit}.
     function quit(uint256 tokenId, uint256 sponsorAmount)
         public
+        override
         onlyHolder(tokenId)
     {
-        LockVault storage la = lockVault[tokenId];
-        require(block.timestamp >= la.time, "DaoTreasury: lock time!");
-
-        uint256 balance = IERC20(WETH).balanceOf(address(this));
-        uint256 sponsorTotalSupply = IERC3664(WEB3DAONFT).totalSupply(
-            SPONSOR_ATTR_ID
+        uint256 ethAmount = IDaoSponsor(DaoSponsor).quit(
+            tokenId,
+            sponsorAmount
         );
-        uint256 quitAmount = (sponsorAmount * balance) / sponsorTotalSupply;
-        reserve -= quitAmount;
-        IWeb3DAOCN(WEB3DAONFT).burn(tokenId, SPONSOR_ATTR_ID, sponsorAmount);
-        IERC20(WETH).transferFrom(address(this), msg.sender, quitAmount);
+        IDaoVault(DaoVault).withdraw(ethAmount, msg.sender);
     }
 
-    /// @dev 铸造Gas积分
-    function mintGas(uint256 tokenId, uint256 amount) public onlyAddressThis {
+    /// @dev See {IDaoTreasury-mintGas}.
+    function mintGas(uint256 gasAmount) public override onlyAddressThis {
+        // 将gasAmount换算成ethAmount
+        uint256 ethAmount = (gasAmount * 1 ether) / gasAttrPrice;
+        // 获取DaoVault储备量
+        uint256 reserve = IDaoVault(DaoVault).reserve();
+        // 确认 (债务+铸造的数量) / 储备量 <= 最大债务比例 / 10000
         require(
-            ((debt + amount) * 1 ether) / reserve <= (maxDebt * 1 ether) / max,
+            (debt * 1 ether + ethAmount) / reserve <= (maxDebt * 1 ether) / max,
             "DaoTreasury: debt more than max debt"
         );
-        debt += amount;
-        IWeb3DAOCN(WEB3DAONFT).mint(
-            tokenId,
-            GAS_ATTR_ID,
-            amount * gasAttrPrice
-        );
+        // 债务增加
+        debt += ethAmount / 1 ether;
+        // 铸造gas
+        IWeb3DAOCN(WEB3DAONFT).mint(holdNFTId, GAS_ATTR_ID, gasAmount);
+        emit MintGas(gasAmount);
     }
 
-    /// @dev 偿还债务
-    function repay(uint256 amount) public onlyAddressThis {
-        IERC20(WETH).transferFrom(msg.sender, address(this), amount);
-        uint256 balance = IERC20(WETH).balanceOf(address(this));
-        if (balance > reserve) {
-            debt = 0;
-            reserve = balance;
-        } else {
-            debt = reserve - balance;
-        }
-    }
-
-    /// @dev 销毁Gas积分
-    function burnGas(uint256 tokenId, uint256 amount) public onlyAddressThis {
-        require(
-            IERC721(WEB3DAONFT).ownerOf(tokenId) == address(this),
-            "DaoTreasury: sell to is not the nft holder"
-        );
-        IWeb3DAOCN(WEB3DAONFT).burn(
-            tokenId,
-            GAS_ATTR_ID,
-            amount * gasAttrPrice
-        );
-    }
-
-    /// @dev 出售gas
-    function sellGas(uint256 tokenId, uint256 amount)
+    /// @dev See {IDaoTreasury-burnGas}.
+    function burnGas(uint256 gasAmount)
         public
+        override
+        onlyAddressThis
+        onlyHolder(holdNFTId)
+    {
+        // 债务减少
+        debt -= gasAmount / gasAttrPrice;
+        // 销毁gas
+        IWeb3DAOCN(WEB3DAONFT).burn(holdNFTId, GAS_ATTR_ID, gasAmount);
+        emit BurnGas(gasAmount);
+    }
+
+    /// @dev See {IDaoTreasury-sellGas}.
+    function sellGas(uint256 tokenId, uint256 gasAmount)
+        public
+        override
         onlyHolder(tokenId)
     {
-        IWeb3DAOCN(WEB3DAONFT).burn(tokenId, GAS_ATTR_ID, amount);
-        IERC20(WETH).transferFrom(
-            address(this),
-            msg.sender,
-            amount / gasAttrPrice
+        // 计算收到的weth数量 = 销毁的gas数量 * (10000 - gas税) / (10000 * 10000)
+        uint256 ethAmount = (gasAmount * (max - gasTax)) / (max * gasAttrPrice);
+        // 将gas发送到合约持有的NFT
+        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+            tokenId,
+            holdNFTId,
+            GAS_ATTR_ID,
+            ethAmount * gasAttrPrice
+        );
+        // 从DaoVault提取WETH
+        IDaoVault(DaoVault).withdraw(ethAmount, msg.sender);
+        emit SellGas(gasAmount);
+    }
+
+    /// @dev See {IDaoTreasury-buyGas}.
+    function buyGas(uint256 tokenId, uint256 ethAmount) public override {
+        // 发送weth到DaoVault
+        WETH.functionCall(
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector,
+                msg.sender,
+                DaoVault,
+                ethAmount
+            )
+        );
+        // DaoVault存款
+        IDaoVault(DaoVault).deposit(ethAmount);
+        // 将gas从合约持有NFT发送到目标NFT
+        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+            holdNFTId,
+            tokenId,
+            GAS_ATTR_ID,
+            ethAmount * gasAttrPrice
+        );
+        emit BuyGas(ethAmount);
+    }
+
+    /// @dev See {IDaoTreasury-borrowGas}.
+    function borrowGas(uint256 tokenId, uint256 gasAmount)
+        public
+        override
+        onlyHolder(tokenId)
+    {
+        // 确认sponsor合约质押成功
+        require(
+            IDaoSponsor(DaoSponsor).borrowGas(tokenId, gasAmount),
+            "DaoTreasury: borrowGas error"
+        );
+        // 从当前合约持有的NFT发送gas
+        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+            holdNFTId,
+            tokenId,
+            GAS_ATTR_ID,
+            gasAmount
         );
     }
 
-    /// @dev 购买gas
-    function buyGas(uint256 to, uint256 amount) public {
-        IWeb3DAOCN(WEB3DAONFT).mint(to, GAS_ATTR_ID, amount);
-        IERC20(WETH).transferFrom(
-            msg.sender,
-            address(this),
-            amount / gasAttrPrice
+    /// @dev See {IDaoTreasury-returnGas}.
+    function returnGas(uint256 tokenId, uint256 gasAmount)
+        public
+        override
+        onlyHolder(tokenId)
+    {
+        // 确认sponsor合约归还成功
+        require(
+            IDaoSponsor(DaoSponsor).returnGas(tokenId, gasAmount),
+            "DaoTreasury: returnGas error"
+        );
+        // 将gas从tokenId发送到当前合约持有的NFT
+        IWeb3DAOCN(WEB3DAONFT).transferFrom(
+            tokenId,
+            holdNFTId,
+            GAS_ATTR_ID,
+            gasAmount
         );
     }
 
-    /// @dev 设置最大债务比例
-    function setMaxDebt(uint256 _maxDebt) public onlyAddressThis {
+    /// @dev See {IDaoTreasury-setMaxDebt}.
+    function setMaxDebt(uint256 _maxDebt) public override onlyAddressThis {
         maxDebt = _maxDebt;
+        emit SetMaxDebt(_maxDebt);
     }
 
-    /// @dev 设置Gas积分价格
-    function setGasAttrPrice(uint256 _gasAttrPrice) public onlyAddressThis {
+    /// @dev See {IDaoTreasury-setGasAttrPrice}.
+    function setGasAttrPrice(uint256 _gasAttrPrice)
+        public
+        override
+        onlyAddressThis
+    {
         gasAttrPrice = _gasAttrPrice;
+        emit SetGasAttrPrice(_gasAttrPrice);
     }
 
-    /// @dev 发送NFT
+    /// @dev See {IDaoTreasury-setGasTax}.
+    function setGasTax(uint256 _gasTax) public override onlyAddressThis {
+        gasTax = _gasTax;
+        emit SetGasTax(_gasTax);
+    }
+
+    /// @dev See {IDaoTreasury-setHoldNFTId}.
+    function setHoldNFTId(uint256 _holdNFTId) public override onlyAddressThis {
+        holdNFTId = _holdNFTId;
+        emit SetHoldNFTId(_holdNFTId);
+    }
+
+    /// @dev See {IDaoTreasury-setDaoVault}.
+    function setDaoVault(address _DaoVault) public override onlyAddressThis {
+        DaoVault = _DaoVault;
+        emit SetDaoVault(_DaoVault);
+    }
+
+    /// @dev See {IDaoTreasury-setDaoSponsor}.
+    function setDaoSponsor(address _DaoSponsor)
+        public
+        override
+        onlyAddressThis
+    {
+        DaoSponsor = _DaoSponsor;
+        emit SetDaoSponsor(_DaoSponsor);
+    }
+
+    /// @dev See {IDaoTreasury-transferNFT}.
     function transferNFT(
         address token,
         address to,
         uint256 tokenId
-    ) public onlyAddressThis {
+    ) public override onlyAddressThis {
         IERC721(token).transferFrom(address(this), to, tokenId);
     }
 
+    /// @dev See {IDaoTreasury-onERC721Received}.
     function onERC721Received(
         address operator,
         address from,
         uint256 tokenId,
         bytes calldata data
-    ) public pure returns (bytes4) {
+    ) public pure override returns (bytes4) {
         operator;
         from;
         tokenId;

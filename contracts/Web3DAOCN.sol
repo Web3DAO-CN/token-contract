@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./EIP3664/ERC3664.sol";
-import "./IWeb3Dao.sol";
+import "./interfaces/IWeb3DAOCN.sol";
 
 contract Web3DAOCN is
     ERC3664,
@@ -184,7 +184,16 @@ contract Web3DAOCN is
         uint256 to,
         uint256 attrId,
         uint256 amount
-    ) public override onlyHolder(from) {
+    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
+        super.transfer(from, to, attrId, amount);
+    }
+
+    function transferFrom(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public override(IWeb3DAOCN, ERC3664) onlyHolder(from) {
         super.transfer(from, to, attrId, amount);
     }
 
