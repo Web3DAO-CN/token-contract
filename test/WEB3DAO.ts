@@ -9,7 +9,7 @@ import { expandTo18Decimals, BN, MINTER_ROLE } from "./shared/constant";
 import Colors = require("colors.ts");
 Colors.enable();
 
-const [wallet, minter, tokenHolder] = waffle.provider.getWallets();
+const [wallet, minter, tokenHolder1, tokenHolder2, tokenHolder3] = waffle.provider.getWallets();
 
 describe("deploy Token", () => {
   let token: Web3DAOCN;
@@ -53,10 +53,10 @@ describe("deploy Token", () => {
       .withArgs(MINTER_ROLE, wallet.address, wallet.address);
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder.address);
+    receipt = await token.connect(minter)["mint(address)"](tokenHolder1.address);
     expect(receipt)
       .to.emit(token, "Transfer")
-      .withArgs(constants.AddressZero, tokenHolder.address, BN(1));
+      .withArgs(constants.AddressZero, tokenHolder1.address, BN(1));
   });
   it("Create Attrs", async () => {
     receipt = await token
@@ -189,7 +189,7 @@ describe("deploy Token", () => {
   });
   it("approve", async () => {
     receipt = await token
-      .connect(tokenHolder)
+      .connect(tokenHolder1)
       ["approve(uint256,uint256,uint256,uint256)"](
         BN(1),
         BN(2),
@@ -198,7 +198,7 @@ describe("deploy Token", () => {
       );
     expect(receipt)
       .to.emit(token, "AttributeApproval")
-      .withArgs(tokenHolder.address, BN(1), BN(2), attrIds[1], amounts[1]);
+      .withArgs(tokenHolder1.address, BN(1), BN(2), attrIds[1], amounts[1]);
   });
   it("approve attr error", async () => {
     await expect(
@@ -213,10 +213,10 @@ describe("deploy Token", () => {
     ).to.be.revertedWith("Web3DAOCN: caller is not the nft holder");
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder.address);
+    receipt = await token.connect(minter)["mint(address)"](tokenHolder2.address);
     expect(receipt)
       .to.emit(token, "Transfer")
-      .withArgs(constants.AddressZero, tokenHolder.address, BN(2));
+      .withArgs(constants.AddressZero, tokenHolder2.address, BN(2));
   });
   it("mintBatch attr", async () => {
     receipt = await token
@@ -239,7 +239,7 @@ describe("deploy Token", () => {
   it("transfer Attr", async () => {
     await expect(
       token
-        .connect(tokenHolder)
+        .connect(tokenHolder1)
         ["transfer(uint256,uint256,uint256,uint256)"](
           BN(1),
           BN(2),
@@ -276,7 +276,7 @@ describe("deploy Token", () => {
   });
   it("transfer Attr", async () => {
     receipt = await token
-      .connect(tokenHolder)
+      .connect(tokenHolder1)
       ["transfer(uint256,uint256,uint256,uint256)"](
         BN(1),
         BN(2),
@@ -285,12 +285,12 @@ describe("deploy Token", () => {
       );
     expect(receipt)
       .to.emit(token, "TransferSingle")
-      .withArgs(tokenHolder.address, BN(1), BN(2), attrIds[0], amounts[0]);
+      .withArgs(tokenHolder1.address, BN(1), BN(2), attrIds[0], amounts[0]);
   });
   it("transfer Attr error", async () => {
     await expect(
       token
-        .connect(tokenHolder)
+        .connect(tokenHolder1)
         ["transfer(uint256,uint256,uint256,uint256)"](
           BN(1),
           BN(2),
@@ -313,10 +313,10 @@ describe("deploy Token", () => {
       .withArgs(wallet.address, BN(1), BN(2), attrIds[1], amounts[1]);
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder.address);
+    receipt = await token.connect(minter)["mint(address)"](tokenHolder3.address);
     expect(receipt)
       .to.emit(token, "Transfer")
-      .withArgs(constants.AddressZero, tokenHolder.address, BN(3));
+      .withArgs(constants.AddressZero, tokenHolder3.address, BN(3));
   });
   it("mint attr", async () => {
     receipt = await token
@@ -350,7 +350,7 @@ describe("deploy Token", () => {
   });
   it("permit approve", async () => {
     let signature = await getPermit(
-      tokenHolder,
+      tokenHolder3,
       token.address,
       BN(3),
       BN(2),

@@ -191,11 +191,11 @@ contract MultiSign {
 
     /**
      *
-     * @dev 替换委员会成员,私有不公开
+     * @dev 替换委员会成员
      * @notice 旧成员存在,新成员不存在.onlyAddressThis
      */
     function replaceCommitee(address commitee, address newCommitee)
-        private
+        public
         onlyAddressThis
         commiteeExists(commitee)
         commiteeNotExists(newCommitee)

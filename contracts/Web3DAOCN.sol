@@ -175,6 +175,20 @@ contract Web3DAOCN is
     }
 
     /**
+     * @dev Transfers attribute type `attrId` from token type `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     */
+    function transfer(
+        uint256 from,
+        uint256 to,
+        uint256 attrId,
+        uint256 amount
+    ) public override onlyHolder(from) {
+        super.transfer(from, to, attrId, amount);
+    }
+    
+    /**
      * @dev Sets a new URI for all attribute types
      */
     function setURI(string memory newuri) public override onlyMinter {

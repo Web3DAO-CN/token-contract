@@ -68,7 +68,7 @@ contract DaoSponsor is Ownable, IDaoSponsor {
         // DaoVault储备量
         uint256 reserve = IDaoVault(DaoVault).reserve();
         // DaoTreasury债务
-        uint256 debt = IDaoTreasury(owner()).debt();
+        uint256 debt = IDaoTreasury(DaoTreasury).debt();
         // 初始化sponsor值数量
         uint256 sponsorAmount;
         // 如果sponsor总发行量为0,首次铸造
