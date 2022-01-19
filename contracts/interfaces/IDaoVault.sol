@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 interface IDaoVault {
-    event Deposit(uint256 amount);
+    event Deposit(uint256 amount, uint256 reserve);
 
-    event Withdraw(uint256 amount);
+    event Withdraw(uint256 amount, uint256 reserve);
 
     event UpdateReserve(uint256 reserve);
 

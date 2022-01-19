@@ -34,8 +34,6 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
     address public override DaoVault;
     /// @dev DaoSponsor
     address public override DaoSponsor;
-    /// @dev NFT合约中Sponsor attrId
-    uint256 public immutable override SPONSOR_ATTR_ID;
     /// @dev NFT合约中Gas attrId
     uint256 public immutable override GAS_ATTR_ID;
     /// @dev gas属性值和eth兑换比例Gas:ETH 10000:1
@@ -55,18 +53,15 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
      * @dev 构造函数
      * @param _WEB3DAONFT NFT合约地址
      * @param _WETH WETH合约地址
-     * @param _SPONSOR_ATTR_ID NFT合约中Sponsor attrId
      * @param _GAS_ATTR_ID NFT合约中Gas attrId
      */
     constructor(
         address _WEB3DAONFT,
         address _WETH,
-        uint256 _SPONSOR_ATTR_ID,
         uint256 _GAS_ATTR_ID
     ) {
         WEB3DAONFT = _WEB3DAONFT;
         WETH = _WETH;
-        SPONSOR_ATTR_ID = _SPONSOR_ATTR_ID;
         GAS_ATTR_ID = _GAS_ATTR_ID;
     }
 
@@ -81,6 +76,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
 
     /// @dev See {IDaoTreasury-sponsor}.
     function sponsor(uint256 tokenId, uint256 ethAmount) public override {
+        IDaoSponsor(DaoSponsor).sponsor(tokenId, ethAmount);
         // 发送weth到DaoVault
         WETH.functionCall(
             abi.encodeWithSelector(
@@ -91,7 +87,6 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
             )
         );
         IDaoVault(DaoVault).deposit(ethAmount);
-        IDaoSponsor(DaoSponsor).sponsor(tokenId, ethAmount);
     }
 
     /// @dev See {IDaoTreasury-quit}.
@@ -108,7 +103,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
     }
 
     /// @dev See {IDaoTreasury-mintGas}.
-    function mintGas(uint256 gasAmount) public override onlyAddressThis {
+    function mintGas(uint256 gasAmount) public override {
         // 将gasAmount换算成ethAmount
         uint256 ethAmount = (gasAmount * 1 ether) / gasAttrPrice;
         // 获取DaoVault储备量
@@ -194,7 +189,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
             "DaoTreasury: borrowGas error"
         );
         // 从当前合约持有的NFT发送gas
-        IERC3664(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transfer(
             holdNFTId,
             tokenId,
             GAS_ATTR_ID,

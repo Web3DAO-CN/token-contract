@@ -67,8 +67,6 @@ contract DaoSponsor is Ownable, IDaoSponsor {
         );
         // DaoVault储备量
         uint256 reserve = IDaoVault(DaoVault).reserve();
-        // DaoTreasury债务
-        uint256 debt = IDaoTreasury(DaoTreasury).debt();
         // 初始化sponsor值数量
         uint256 sponsorAmount;
         // 如果sponsor总发行量为0,首次铸造
@@ -77,8 +75,8 @@ contract DaoSponsor is Ownable, IDaoSponsor {
             sponsorAmount = ethAmount;
             // 否则为后续赞助
         } else {
-            // sponsor值 = 赞助的weth数量 * sponsor总发行量 / 储备量 + 债务
-            sponsorAmount = (ethAmount * sponsorTotalSupply) / (reserve + debt);
+            // sponsor值 = 赞助的weth数量 * sponsor总发行量 / 储备量
+            sponsorAmount = (ethAmount * sponsorTotalSupply) / reserve;
         }
         // 锁仓结构体
         LockVault storage la = _lockVault[tokenId];
@@ -114,8 +112,7 @@ contract DaoSponsor is Ownable, IDaoSponsor {
         uint256 sponsorTotalSupply = IERC3664(WEB3DAONFT).totalSupply(
             SPONSOR_ATTR_ID
         );
-        // 计算退出的weth数量 = 退出的sponsor值数量 * 当前合约的weth余额 / sponsor总发行量
-        // 退出数量不计算债务,仅在系统盈利情况下才有收益
+        // 计算退出的weth数量 = 退出的sponsor值数量 * 储备量 / sponsor总发行量
         quitAmount = (sponsorAmount * reserve) / sponsorTotalSupply;
         // 减少sponsorAmount
         lv.sponsorAmount -= sponsorAmount;
@@ -171,10 +168,8 @@ contract DaoSponsor is Ownable, IDaoSponsor {
         LockVault storage lv = _lockVault[tokenId];
         // 确认借出的gas大于等于归还的gas
         require(lv.borrowGasAmount >= gasAmount, "DaoSponsor: gasAmount error");
-        // gas和eth兑换比例
-        uint256 gasAttrPrice = IDaoTreasury(DaoTreasury).gasAttrPrice();
         // 解锁数量 = 锁定的数量 * 归还数量 * 10000 / 借出的gas
-        uint256 unStakeAmount = (lv.stakeAmount * (gasAmount / gasAttrPrice)) /
+        uint256 unStakeAmount = (lv.stakeAmount * gasAmount) /
             lv.borrowGasAmount;
         // 更新锁仓数据
         lv.stakeAmount -= unStakeAmount;

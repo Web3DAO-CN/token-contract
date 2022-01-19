@@ -174,19 +174,6 @@
     },
     {
       "inputs": [],
-      "name": "SPONSOR_ATTR_ID",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "WEB3DAONFT",
       "outputs": [
         {

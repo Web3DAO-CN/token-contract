@@ -53,7 +53,7 @@ describe("deploy Token", () => {
   it("vault deposit", async () => {
     expect(await vault.deposit(expandTo18Decimals(1000)))
       .to.emit(vault, "Deposit")
-      .withArgs(expandTo18Decimals(1000));
+      .withArgs(expandTo18Decimals(1000), expandTo18Decimals(1000));
   });
 
   it("vault reserve", async () => {
@@ -75,7 +75,7 @@ describe("deploy Token", () => {
   it("vault withdraw", async () => {
     expect(await vault.withdraw(expandTo18Decimals(1000), minter.address))
       .to.emit(vault, "Withdraw")
-      .withArgs(expandTo18Decimals(1000))
+      .withArgs(expandTo18Decimals(1000), expandTo18Decimals(0))
       .to.emit(weth, "Transfer")
       .withArgs(vault.address, minter.address, expandTo18Decimals(1000));
   });
@@ -103,3 +103,7 @@ describe("deploy Token", () => {
       .withArgs(expandTo18Decimals(1000));
   });
 });
+
+// 100.000000000000000000
+// 321.506061369543983534
+// 375.007812011749265670

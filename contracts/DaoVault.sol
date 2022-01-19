@@ -37,7 +37,7 @@ contract DaoVault is Ownable, IDaoVault {
             "DaoVault:no enough amount"
         );
         reserve += amount;
-        emit Deposit(amount);
+        emit Deposit(amount, reserve);
     }
 
     /// @dev See {IDaoVault-withdraw}.
@@ -51,7 +51,7 @@ contract DaoVault is Ownable, IDaoVault {
             abi.encodeWithSelector(IERC20.transfer.selector, to, amount)
         );
         reserve -= amount;
-        emit Withdraw(amount);
+        emit Withdraw(amount, reserve);
     }
 
     /// @dev See {IDaoVault-updateReserve}.

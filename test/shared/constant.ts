@@ -2,11 +2,12 @@ import { ethers, waffle } from "hardhat";
 import {
   BigNumber,
   BytesLike,
+  utils
 } from "ethers";
 import { keccak256 } from "@ethersproject/keccak256";
 
 function expandTo18Decimals(n: number): BigNumber {
-  return BigNumber.from(n).mul(BigNumber.from(10).pow(18));
+  return utils.parseEther((n).toString());
 }
 
 function BN(n: number): BigNumber {

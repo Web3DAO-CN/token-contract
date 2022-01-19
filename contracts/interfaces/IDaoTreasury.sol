@@ -45,9 +45,6 @@ interface IDaoTreasury {
     /// @dev DaoSponsor
     function DaoSponsor() external view returns (address);
 
-    /// @dev NFT合约中Sponsor attrId
-    function SPONSOR_ATTR_ID() external view returns (uint256);
-
     /// @dev NFT合约中Gas attrId
     function GAS_ATTR_ID() external view returns (uint256);
 
