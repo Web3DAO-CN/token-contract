@@ -5,17 +5,12 @@
 npm install
 ```
 
-## Deploy
+## Compile
 ```
-truffle migrate --f 2 --to 3 --network development  
+npx hardhat compile
 ```
 
 ## Testing
 ```
-npm run test
-```
-
-## Publish & Verify
-```
-truffle run verify Metacore --network development
+npx hardhat test
 ```
