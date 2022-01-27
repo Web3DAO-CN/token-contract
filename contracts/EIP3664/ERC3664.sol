@@ -30,10 +30,6 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     // totalSupply attribute ID => totalSupply
     mapping(uint256 => uint256) private _totalSupply;
 
-    constructor(string memory uri_) {
-        _setURI(uri_);
-    }
-
     /**
      * @dev See {IERC165-supportsInterface}.
      */

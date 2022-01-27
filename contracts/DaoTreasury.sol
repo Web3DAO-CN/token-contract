@@ -110,7 +110,9 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
         uint256 reserve = IDaoVault(DaoVault).reserve();
         // 确认 (债务+铸造的数量) / 储备量 <= 最大债务比例 / 10000
         require(
-            (debt * 1 ether + ethAmount) / reserve <= (maxDebt * 1 ether) / max,
+            reserve > 0 &&
+                (debt * 1 ether + ethAmount) / reserve <=
+                (maxDebt * 1 ether) / max,
             "DaoTreasury: debt more than max debt"
         );
         // 债务增加
@@ -151,7 +153,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
         );
         // 从DaoVault提取WETH
         IDaoVault(DaoVault).withdraw(ethAmount, msg.sender);
-        emit SellGas(gasAmount);
+        emit SellGas(tokenId, gasAmount);
     }
 
     /// @dev See {IDaoTreasury-buyGas}.
@@ -168,13 +170,13 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
         // DaoVault存款
         IDaoVault(DaoVault).deposit(ethAmount);
         // 将gas从合约持有NFT发送到目标NFT
-        IERC3664(WEB3DAONFT).transferFrom(
+        IERC3664(WEB3DAONFT).transfer(
             holdNFTId,
             tokenId,
             GAS_ATTR_ID,
             ethAmount * gasAttrPrice
         );
-        emit BuyGas(ethAmount);
+        emit BuyGas(tokenId, ethAmount);
     }
 
     /// @dev See {IDaoTreasury-borrowGas}.

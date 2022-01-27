@@ -22,6 +22,12 @@
         {
           "indexed": false,
           "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
           "name": "gasAmount",
           "type": "uint256"
         }
@@ -45,6 +51,12 @@
     {
       "anonymous": false,
       "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
         {
           "indexed": false,
           "internalType": "uint256",

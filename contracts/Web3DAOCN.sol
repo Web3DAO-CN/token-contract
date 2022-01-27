@@ -17,6 +17,8 @@ contract Web3DAOCN is
     IWeb3DAOCN
 {
     using Counters for Counters.Counter;
+    /// @dev baseURI
+    string public baseURI;
     /// @dev tokenID
     Counters.Counter private _tokenIdTracker;
     /// @dev constant bytes
@@ -31,10 +33,7 @@ contract Web3DAOCN is
     /// @dev Attr transfer is allow
     mapping(uint256 => bool) public override attrTransferAllow;
 
-    constructor(string memory uri_)
-        ERC3664(uri_)
-        ERC721("Web3 DAO CN NFT", unicode"WEB³")
-    {
+    constructor() ERC721("Web3 DAO CN NFT", unicode"WEB³") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
     }
@@ -187,12 +186,26 @@ contract Web3DAOCN is
     ) public override onlyHolder(from) {
         super.transfer(from, to, attrId, amount);
     }
-    
+
     /**
      * @dev Sets a new URI for all attribute types
      */
     function setURI(string memory newuri) public override onlyMinter {
         _setURI(newuri);
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}.
+     */
+    function setBaseURI(string memory newuri) public override onlyMinter {
+        baseURI = newuri;
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}.
+     */
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
     }
 
     /**

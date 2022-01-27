@@ -10,10 +10,10 @@ interface IDaoTreasury {
     event BurnGas(uint256 gasAmount);
 
     /// @dev 出售Gas事件
-    event SellGas(uint256 gasAmount);
+    event SellGas(uint256 tokenId, uint256 gasAmount);
 
     /// @dev 购买Gas事件
-    event BuyGas(uint256 gasAmount);
+    event BuyGas(uint256 tokenId, uint256 gasAmount);
 
     /// @dev 设置最大债务比例
     event SetMaxDebt(uint256 _maxDebt);

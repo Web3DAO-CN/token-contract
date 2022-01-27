@@ -74,7 +74,7 @@ describe("deploy Token", () => {
       ethAmount: expandTo18Decimals(500),
     },
   ];
-  before("deploy", async () => {
+  before("deploy 部署合约", async () => {
     attrIds = [BN(1), BN(2), BN(3), BN(4), BN(5)];
     names = ["Gas", "Block", "Nonce", "Tx", "Sponsor"];
     symbols = ["gas", "block", "nonce", "tx", "sp"];
@@ -113,387 +113,412 @@ describe("deploy Token", () => {
 
     price = await buyNFT.price();
   });
-  describe("NFT管理员操作", () => {
-    it("创建属性", async () => {
-      expect(await token.createBatch(attrIds, names, symbols, decimals, uris))
-        .to.emit(token, "AttributeCreated")
-        .withArgs(attrIds[0], names[0], symbols[0], decimals[0], uris[0])
-        .to.emit(token, "AttributeCreated")
-        .withArgs(attrIds[1], names[1], symbols[1], decimals[1], uris[1])
-        .to.emit(token, "AttributeCreated")
-        .withArgs(attrIds[2], names[2], symbols[2], decimals[2], uris[2])
-        .to.emit(token, "AttributeCreated")
-        .withArgs(attrIds[3], names[3], symbols[3], decimals[3], uris[3])
-        .to.emit(token, "AttributeCreated")
-        .withArgs(attrIds[4], names[4], symbols[4], decimals[4], uris[4]);
-    });
+  describe("前置操作", () => {
+    describe("NFT管理员操作", () => {
+      it("创建属性", async () => {
+        expect(await token.createBatch(attrIds, names, symbols, decimals, uris))
+          .to.emit(token, "AttributeCreated")
+          .withArgs(attrIds[0], names[0], symbols[0], decimals[0], uris[0])
+          .to.emit(token, "AttributeCreated")
+          .withArgs(attrIds[1], names[1], symbols[1], decimals[1], uris[1])
+          .to.emit(token, "AttributeCreated")
+          .withArgs(attrIds[2], names[2], symbols[2], decimals[2], uris[2])
+          .to.emit(token, "AttributeCreated")
+          .withArgs(attrIds[3], names[3], symbols[3], decimals[3], uris[3])
+          .to.emit(token, "AttributeCreated")
+          .withArgs(attrIds[4], names[4], symbols[4], decimals[4], uris[4]);
+      });
 
-    it("token 升级权限 sponsor", async () => {
-      expect(await token.grantRole(MINTER_ROLE, sponsor.address))
-        .to.emit(token, "RoleGranted")
-        .withArgs(MINTER_ROLE, sponsor.address, wallet.address);
-    });
+      it("token 升级权限 sponsor", async () => {
+        expect(await token.grantRole(MINTER_ROLE, sponsor.address))
+          .to.emit(token, "RoleGranted")
+          .withArgs(MINTER_ROLE, sponsor.address, wallet.address);
+      });
 
-    it("token 升级权限 buyNFT", async () => {
-      expect(await token.grantRole(MINTER_ROLE, buyNFT.address))
-        .to.emit(token, "RoleGranted")
-        .withArgs(MINTER_ROLE, buyNFT.address, wallet.address);
-    });
+      it("token 升级权限 buyNFT", async () => {
+        expect(await token.grantRole(MINTER_ROLE, buyNFT.address))
+          .to.emit(token, "RoleGranted")
+          .withArgs(MINTER_ROLE, buyNFT.address, wallet.address);
+      });
 
-    it("token 升级权限 treasury", async () => {
-      expect(await token.grantRole(MINTER_ROLE, treasury.address))
-        .to.emit(token, "RoleGranted")
-        .withArgs(MINTER_ROLE, treasury.address, wallet.address);
-    });
+      it("token 升级权限 treasury", async () => {
+        expect(await token.grantRole(MINTER_ROLE, treasury.address))
+          .to.emit(token, "RoleGranted")
+          .withArgs(MINTER_ROLE, treasury.address, wallet.address);
+      });
 
-    it("给treasury铸造 NFT", async () => {
-      expect(await token["mint(address)"](treasury.address))
-        .to.emit(token, "Transfer")
-        .withArgs(constants.AddressZero, treasury.address, BN(1));
+      it("给treasury铸造 NFT", async () => {
+        expect(await token["mint(address)"](treasury.address))
+          .to.emit(token, "Transfer")
+          .withArgs(constants.AddressZero, treasury.address, BN(1));
+      });
     });
-  });
-  describe("DaoTreasury 管理操作", () => {
-    it("DaoTreasury 添加委员会 1", async () => {
-      let functionData = treasury.interface.encodeFunctionData("addCommitee", [
-        commitee1.address,
-      ]);
-      expect(await treasury.submitTransaction(treasury.address, functionData))
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(wallet.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "CommiteeAddition")
-        .withArgs(commitee1.address);
-      transactionId = transactionId.add(BN(1));
-    });
-    it("DaoTreasury 添加委员会 2", async () => {
-      let functionData = treasury.interface.encodeFunctionData("addCommitee", [
-        commitee2.address,
-      ]);
-      expect(await treasury.submitTransaction(treasury.address, functionData))
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(wallet.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "CommiteeAddition")
-        .withArgs(commitee2.address);
-      transactionId = transactionId.add(BN(1));
-    });
-    it("DaoTreasury 设置最小确认数2", async () => {
-      let functionData = treasury.interface.encodeFunctionData(
-        "changeRequirement",
-        [BN(2)]
-      );
-      expect(await treasury.submitTransaction(treasury.address, functionData))
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(wallet.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "RequirementChange")
-        .withArgs(BN(2));
-      transactionId = transactionId.add(BN(1));
-    });
-    it("DaoTreasury 提交操作 移除委员", async () => {
-      let functionData = treasury.interface.encodeFunctionData(
-        "removeCommitee",
-        [wallet.address]
-      );
-      expect(
-        await treasury
-          .connect(commitee1)
-          .submitTransaction(treasury.address, functionData)
-      )
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee1.address, transactionId);
-      transactionId = transactionId.add(BN(1));
-    });
-
-    it("DaoTreasury 确认操作 移除委员", async () => {
-      expect(await treasury.connect(commitee2).confirmTransaction(BN(3)))
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee2.address, BN(3))
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(BN(3))
-        .to.emit(treasury, "CommiteeRemoval")
-        .withArgs(wallet.address);
-    });
-    it("DaoTreasury 设置DaoVault", async () => {
-      let functionData = treasury.interface.encodeFunctionData("setDaoVault", [
-        vault.address,
-      ]);
-      expect(
-        await treasury
-          .connect(commitee1)
-          .submitTransaction(treasury.address, functionData)
-      )
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee1.address, transactionId);
-      expect(
-        await treasury.connect(commitee2).confirmTransaction(transactionId)
-      )
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee2.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "SetDaoVault")
-        .withArgs(vault.address);
-      transactionId = transactionId.add(BN(1));
-    });
-    it("DaoTreasury 设置DaoSponsor", async () => {
-      let functionData = treasury.interface.encodeFunctionData(
-        "setDaoSponsor",
-        [sponsor.address]
-      );
-      expect(
-        await treasury
-          .connect(commitee1)
-          .submitTransaction(treasury.address, functionData)
-      )
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee1.address, transactionId);
-      expect(
-        await treasury.connect(commitee2).confirmTransaction(transactionId)
-      )
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee2.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "SetDaoSponsor")
-        .withArgs(sponsor.address);
-      transactionId = transactionId.add(BN(1));
-    });
-    it("DaoTreasury 设置HoldNFTId", async () => {
-      let functionData = treasury.interface.encodeFunctionData("setHoldNFTId", [
-        BN(1),
-      ]);
-      expect(
-        await treasury
-          .connect(commitee1)
-          .submitTransaction(treasury.address, functionData)
-      )
-        .to.emit(treasury, "Submission")
-        .withArgs(transactionId)
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee1.address, transactionId);
-      expect(
-        await treasury.connect(commitee2).confirmTransaction(transactionId)
-      )
-        .to.emit(treasury, "Confirmation")
-        .withArgs(commitee2.address, transactionId)
-        .to.emit(treasury, "ExecutionSuccess")
-        .withArgs(transactionId)
-        .to.emit(treasury, "SetHoldNFTId")
-        .withArgs(BN(1));
-      transactionId = transactionId.add(BN(1));
-    });
-  });
-  describe("DaoSponsor 管理操作", () => {
-    it("DaoSponsor 设置DaoVault", async () => {
-      expect(await sponsor.setDaoVault(vault.address))
-        .to.emit(sponsor, "SetDaoVault")
-        .withArgs(vault.address);
-    });
-
-    it("DaoSponsor 设置DaoTreasury", async () => {
-      expect(await sponsor.setDaoTreasury(treasury.address))
-        .to.emit(sponsor, "SetDaoTreasury")
-        .withArgs(treasury.address);
-    });
-
-    it("DaoSponsor 转移owner权限", async () => {
-      expect(await sponsor.transferOwnership(treasury.address))
-        .to.emit(sponsor, "OwnershipTransferred")
-        .withArgs(wallet.address, treasury.address);
-    });
-  });
-  describe("DaoVault 管理操作", () => {
-    it("DaoVault 转移owner权限", async () => {
-      expect(await vault.transferOwnership(treasury.address))
-        .to.emit(vault, "OwnershipTransferred")
-        .withArgs(wallet.address, treasury.address);
-    });
-  });
-  describe("buyNFT 管理操作", () => {
-    it("buyNFT 设置DaoVault", async () => {
-      expect(await buyNFT.setDaoVault(vault.address))
-        .to.emit(buyNFT, "SetDaoVault")
-        .withArgs(vault.address);
-    });
-    it("buyNFT 转移owner权限", async () => {
-      expect(await buyNFT.transferOwnership(treasury.address))
-        .to.emit(buyNFT, "OwnershipTransferred")
-        .withArgs(wallet.address, treasury.address);
-    });
-  });
-
-  describe("give sponsor weth", () => {
-    it("deposit weth sponsor1", async () => {
-      expect(
-        await weth.deposit(
-          sponsor1.address,
-          utils.defaultAbiCoder.encode(["uint256"], [expandTo18Decimals(1000)])
-        )
-      )
-        .to.emit(weth, "Transfer")
-        .withArgs(
-          constants.AddressZero,
-          sponsor1.address,
-          expandTo18Decimals(1000)
+    describe("DaoTreasury 管理操作", () => {
+      it("DaoTreasury 添加委员会 1", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "addCommitee",
+          [commitee1.address]
         );
-    });
-    it("deposit weth sponsor2", async () => {
-      expect(
-        await weth.deposit(
-          sponsor2.address,
-          utils.defaultAbiCoder.encode(["uint256"], [expandTo18Decimals(1000)])
-        )
-      )
-        .to.emit(weth, "Transfer")
-        .withArgs(
-          constants.AddressZero,
-          sponsor2.address,
-          expandTo18Decimals(1000)
+        expect(await treasury.submitTransaction(treasury.address, functionData))
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(wallet.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "CommiteeAddition")
+          .withArgs(commitee1.address);
+        transactionId = transactionId.add(BN(1));
+      });
+      it("DaoTreasury 添加委员会 2", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "addCommitee",
+          [commitee2.address]
         );
-    });
-    it("deposit weth sponsor3", async () => {
-      expect(
-        await weth.deposit(
-          sponsor3.address,
-          utils.defaultAbiCoder.encode(["uint256"], [expandTo18Decimals(1000)])
-        )
-      )
-        .to.emit(weth, "Transfer")
-        .withArgs(
-          constants.AddressZero,
-          sponsor3.address,
-          expandTo18Decimals(1000)
+        expect(await treasury.submitTransaction(treasury.address, functionData))
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(wallet.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "CommiteeAddition")
+          .withArgs(commitee2.address);
+        transactionId = transactionId.add(BN(1));
+      });
+      it("DaoTreasury 设置最小确认数2", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "changeRequirement",
+          [BN(2)]
         );
-    });
-    it("deposit weth sponsor4", async () => {
-      expect(
-        await weth.deposit(
-          sponsor4.address,
-          utils.defaultAbiCoder.encode(["uint256"], [expandTo18Decimals(1000)])
-        )
-      )
-        .to.emit(weth, "Transfer")
-        .withArgs(
-          constants.AddressZero,
-          sponsor4.address,
-          expandTo18Decimals(1000)
+        expect(await treasury.submitTransaction(treasury.address, functionData))
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(wallet.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "RequirementChange")
+          .withArgs(BN(2));
+        transactionId = transactionId.add(BN(1));
+      });
+      it("DaoTreasury 提交操作 移除委员", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "removeCommitee",
+          [wallet.address]
         );
-    });
-    it("deposit weth sponsor5", async () => {
-      expect(
-        await weth.deposit(
-          sponsor5.address,
-          utils.defaultAbiCoder.encode(["uint256"], [expandTo18Decimals(1000)])
+        expect(
+          await treasury
+            .connect(commitee1)
+            .submitTransaction(treasury.address, functionData)
         )
-      )
-        .to.emit(weth, "Transfer")
-        .withArgs(
-          constants.AddressZero,
-          sponsor5.address,
-          expandTo18Decimals(1000)
-        );
-    });
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee1.address, transactionId);
+        transactionId = transactionId.add(BN(1));
+      });
 
-    it("weth approve sponsor1", async () => {
-      expect(
-        await weth
-          .connect(sponsor1)
-          .approve(treasury.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor1.address, treasury.address, constants.MaxUint256);
-      expect(
-        await weth
-          .connect(sponsor1)
-          .approve(buyNFT.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor1.address, buyNFT.address, constants.MaxUint256);
+      it("DaoTreasury 确认操作 移除委员", async () => {
+        expect(await treasury.connect(commitee2).confirmTransaction(BN(3)))
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee2.address, BN(3))
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(BN(3))
+          .to.emit(treasury, "CommiteeRemoval")
+          .withArgs(wallet.address);
+      });
+      it("DaoTreasury 设置DaoVault", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "setDaoVault",
+          [vault.address]
+        );
+        expect(
+          await treasury
+            .connect(commitee1)
+            .submitTransaction(treasury.address, functionData)
+        )
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee1.address, transactionId);
+        expect(
+          await treasury.connect(commitee2).confirmTransaction(transactionId)
+        )
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee2.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "SetDaoVault")
+          .withArgs(vault.address);
+        transactionId = transactionId.add(BN(1));
+      });
+      it("DaoTreasury 设置DaoSponsor", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "setDaoSponsor",
+          [sponsor.address]
+        );
+        expect(
+          await treasury
+            .connect(commitee1)
+            .submitTransaction(treasury.address, functionData)
+        )
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee1.address, transactionId);
+        expect(
+          await treasury.connect(commitee2).confirmTransaction(transactionId)
+        )
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee2.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "SetDaoSponsor")
+          .withArgs(sponsor.address);
+        transactionId = transactionId.add(BN(1));
+      });
+      it("DaoTreasury 设置HoldNFTId", async () => {
+        let functionData = treasury.interface.encodeFunctionData(
+          "setHoldNFTId",
+          [BN(1)]
+        );
+        expect(
+          await treasury
+            .connect(commitee1)
+            .submitTransaction(treasury.address, functionData)
+        )
+          .to.emit(treasury, "Submission")
+          .withArgs(transactionId)
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee1.address, transactionId);
+        expect(
+          await treasury.connect(commitee2).confirmTransaction(transactionId)
+        )
+          .to.emit(treasury, "Confirmation")
+          .withArgs(commitee2.address, transactionId)
+          .to.emit(treasury, "ExecutionSuccess")
+          .withArgs(transactionId)
+          .to.emit(treasury, "SetHoldNFTId")
+          .withArgs(BN(1));
+        transactionId = transactionId.add(BN(1));
+      });
     });
-    it("weth approve sponsor2", async () => {
-      expect(
-        await weth
-          .connect(sponsor2)
-          .approve(treasury.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor2.address, treasury.address, constants.MaxUint256);
-      expect(
-        await weth
-          .connect(sponsor2)
-          .approve(buyNFT.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor2.address, buyNFT.address, constants.MaxUint256);
+    describe("DaoSponsor 管理操作", () => {
+      it("DaoSponsor 设置DaoVault", async () => {
+        expect(await sponsor.setDaoVault(vault.address))
+          .to.emit(sponsor, "SetDaoVault")
+          .withArgs(vault.address);
+      });
+
+      it("DaoSponsor 设置DaoTreasury", async () => {
+        expect(await sponsor.setDaoTreasury(treasury.address))
+          .to.emit(sponsor, "SetDaoTreasury")
+          .withArgs(treasury.address);
+      });
+
+      it("DaoSponsor 转移owner权限", async () => {
+        expect(await sponsor.transferOwnership(treasury.address))
+          .to.emit(sponsor, "OwnershipTransferred")
+          .withArgs(wallet.address, treasury.address);
+      });
     });
-    it("weth approve sponsor3", async () => {
-      expect(
-        await weth
-          .connect(sponsor3)
-          .approve(treasury.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor3.address, treasury.address, constants.MaxUint256);
-      expect(
-        await weth
-          .connect(sponsor3)
-          .approve(buyNFT.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor3.address, buyNFT.address, constants.MaxUint256);
+    describe("DaoVault 管理操作", () => {
+      it("DaoVault 转移owner权限", async () => {
+        expect(await vault.transferOwnership(treasury.address))
+          .to.emit(vault, "OwnershipTransferred")
+          .withArgs(wallet.address, treasury.address);
+      });
     });
-    it("weth approve sponsor4", async () => {
-      expect(
-        await weth
-          .connect(sponsor4)
-          .approve(treasury.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor4.address, treasury.address, constants.MaxUint256);
-      expect(
-        await weth
-          .connect(sponsor4)
-          .approve(buyNFT.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor4.address, buyNFT.address, constants.MaxUint256);
+    describe("buyNFT 管理操作", () => {
+      it("buyNFT 设置DaoVault", async () => {
+        expect(await buyNFT.setDaoVault(vault.address))
+          .to.emit(buyNFT, "SetDaoVault")
+          .withArgs(vault.address);
+      });
+      it("buyNFT 转移owner权限", async () => {
+        expect(await buyNFT.transferOwnership(treasury.address))
+          .to.emit(buyNFT, "OwnershipTransferred")
+          .withArgs(wallet.address, treasury.address);
+      });
     });
-    it("weth approve sponsor5", async () => {
-      expect(
-        await weth
-          .connect(sponsor5)
-          .approve(treasury.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor5.address, treasury.address, constants.MaxUint256);
-      expect(
-        await weth
-          .connect(sponsor5)
-          .approve(buyNFT.address, constants.MaxUint256)
-      )
-        .to.emit(weth, "Approval")
-        .withArgs(sponsor5.address, buyNFT.address, constants.MaxUint256);
+    describe("give sponsor weth", () => {
+      it("deposit weth sponsor1", async () => {
+        expect(
+          await weth.deposit(
+            sponsor1.address,
+            utils.defaultAbiCoder.encode(
+              ["uint256"],
+              [expandTo18Decimals(1000)]
+            )
+          )
+        )
+          .to.emit(weth, "Transfer")
+          .withArgs(
+            constants.AddressZero,
+            sponsor1.address,
+            expandTo18Decimals(1000)
+          );
+      });
+      it("deposit weth sponsor2", async () => {
+        expect(
+          await weth.deposit(
+            sponsor2.address,
+            utils.defaultAbiCoder.encode(
+              ["uint256"],
+              [expandTo18Decimals(1000)]
+            )
+          )
+        )
+          .to.emit(weth, "Transfer")
+          .withArgs(
+            constants.AddressZero,
+            sponsor2.address,
+            expandTo18Decimals(1000)
+          );
+      });
+      it("deposit weth sponsor3", async () => {
+        expect(
+          await weth.deposit(
+            sponsor3.address,
+            utils.defaultAbiCoder.encode(
+              ["uint256"],
+              [expandTo18Decimals(1000)]
+            )
+          )
+        )
+          .to.emit(weth, "Transfer")
+          .withArgs(
+            constants.AddressZero,
+            sponsor3.address,
+            expandTo18Decimals(1000)
+          );
+      });
+      it("deposit weth sponsor4", async () => {
+        expect(
+          await weth.deposit(
+            sponsor4.address,
+            utils.defaultAbiCoder.encode(
+              ["uint256"],
+              [expandTo18Decimals(1000)]
+            )
+          )
+        )
+          .to.emit(weth, "Transfer")
+          .withArgs(
+            constants.AddressZero,
+            sponsor4.address,
+            expandTo18Decimals(1000)
+          );
+      });
+      it("deposit weth sponsor5", async () => {
+        expect(
+          await weth.deposit(
+            sponsor5.address,
+            utils.defaultAbiCoder.encode(
+              ["uint256"],
+              [expandTo18Decimals(1000)]
+            )
+          )
+        )
+          .to.emit(weth, "Transfer")
+          .withArgs(
+            constants.AddressZero,
+            sponsor5.address,
+            expandTo18Decimals(1000)
+          );
+      });
+
+      it("weth approve sponsor1", async () => {
+        expect(
+          await weth
+            .connect(sponsor1)
+            .approve(treasury.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor1.address, treasury.address, constants.MaxUint256);
+        expect(
+          await weth
+            .connect(sponsor1)
+            .approve(buyNFT.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor1.address, buyNFT.address, constants.MaxUint256);
+      });
+      it("weth approve sponsor2", async () => {
+        expect(
+          await weth
+            .connect(sponsor2)
+            .approve(treasury.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor2.address, treasury.address, constants.MaxUint256);
+        expect(
+          await weth
+            .connect(sponsor2)
+            .approve(buyNFT.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor2.address, buyNFT.address, constants.MaxUint256);
+      });
+      it("weth approve sponsor3", async () => {
+        expect(
+          await weth
+            .connect(sponsor3)
+            .approve(treasury.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor3.address, treasury.address, constants.MaxUint256);
+        expect(
+          await weth
+            .connect(sponsor3)
+            .approve(buyNFT.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor3.address, buyNFT.address, constants.MaxUint256);
+      });
+      it("weth approve sponsor4", async () => {
+        expect(
+          await weth
+            .connect(sponsor4)
+            .approve(treasury.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor4.address, treasury.address, constants.MaxUint256);
+        expect(
+          await weth
+            .connect(sponsor4)
+            .approve(buyNFT.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor4.address, buyNFT.address, constants.MaxUint256);
+      });
+      it("weth approve sponsor5", async () => {
+        expect(
+          await weth
+            .connect(sponsor5)
+            .approve(treasury.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor5.address, treasury.address, constants.MaxUint256);
+        expect(
+          await weth
+            .connect(sponsor5)
+            .approve(buyNFT.address, constants.MaxUint256)
+        )
+          .to.emit(weth, "Approval")
+          .withArgs(sponsor5.address, buyNFT.address, constants.MaxUint256);
+      });
     });
   });
+  // 测试计划: 5个赞助商,按照testPlan数组进行赞助
+  // 每一个赞助商首先要购买NFT,vault中会产生每人0.025eth收益
+  // 之后赞助商赞助,并铸造sponsor的attr积分数量
+  // 最后treasury再铸造一些gas
   describe("sponsor 赞助", () => {
     for (let i = 0; i < testPlan.length; i++) {
       let tokenId = i + 2;
+      let mintGasAmount = expandTo18Decimals(100000);
       it("sponsor " + (i + 1) + " 购买NFT", async () => {
         reserve = reserve.add(price);
         expect(
@@ -553,7 +578,7 @@ describe("deploy Token", () => {
       });
       it("DaoTreasury 铸造gas", async () => {
         let functionData = treasury.interface.encodeFunctionData("mintGas", [
-          expandTo18Decimals(10000),
+          mintGasAmount,
         ]);
         expect(
           await treasury
@@ -572,25 +597,26 @@ describe("deploy Token", () => {
           .to.emit(treasury, "ExecutionSuccess")
           .withArgs(transactionId)
           .to.emit(treasury, "MintGas")
-          .withArgs(expandTo18Decimals(10000));
+          .withArgs(mintGasAmount);
         transactionId = transactionId.add(BN(1));
-        debt = expandTo18Decimals(1);
       });
     }
   });
+  // 测试计划: treasury铸造一些gas,然后用sponsor5借出
   describe("DaoTreasury 借出gas", () => {
+    let mintGasAmount = expandTo18Decimals(4000000);
     it("DaoTreasury borrowGas 借出gas超出Treasury持有量错误", async () => {
       console.log(
         "gasTotalSupply():",
         (await token["totalSupply(uint256)"](gasAttrId)).toString()
       );
       await expect(
-        treasury.connect(sponsor5).borrowGas(BN(6), expandTo18Decimals(100000))
+        treasury.connect(sponsor5).borrowGas(BN(6), mintGasAmount)
       ).revertedWith("ERC3664: transfer amount exceeds balance");
     });
     it("DaoTreasury 铸造gas", async () => {
       let functionData = treasury.interface.encodeFunctionData("mintGas", [
-        expandTo18Decimals(4000000),
+        mintGasAmount,
       ]);
       expect(
         await treasury
@@ -609,13 +635,14 @@ describe("deploy Token", () => {
         .to.emit(treasury, "ExecutionSuccess")
         .withArgs(transactionId)
         .to.emit(treasury, "MintGas")
-        .withArgs(expandTo18Decimals(4000000));
+        .withArgs(mintGasAmount);
       transactionId = transactionId.add(BN(1));
-      debt = expandTo18Decimals(500);
     });
     it("DaoTreasury borrowGas 超出最大借出量错误", async () => {
       await expect(
-        treasury.connect(sponsor5).borrowGas(BN(6), expandTo18Decimals(4000001))
+        treasury
+          .connect(sponsor5)
+          .borrowGas(BN(6), mintGasAmount.add(expandTo18Decimals(1)))
       ).revertedWith("DaoSponsor:more than max borrow");
     });
     it("DaoTreasury sponsor5 借出gas", async () => {
@@ -632,6 +659,8 @@ describe("deploy Token", () => {
         .withArgs(tokenId, gasAmount, stakeAmount);
     });
   });
+  // 测试计划: 系统时间流逝1年,之后5个赞助商退出
+  // sponsor5因为没有归还借出的gas所以退出一部分
   describe("sponsor 退出", () => {
     it("DaoTreasury quit 退出未到时间错误", async () => {
       await expect(
@@ -679,6 +708,7 @@ describe("deploy Token", () => {
       });
     }
   });
+  // 测试计划: sponsor5归还借出的gas,并将解锁的sponsor积分退出
   describe("sponsor 归还gas", () => {
     let tokenId = BN(6);
     it("DaoTreasury sponsor5 approve gas", async () => {

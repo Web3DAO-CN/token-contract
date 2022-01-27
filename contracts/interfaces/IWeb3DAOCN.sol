@@ -66,6 +66,9 @@ interface IWeb3DAOCN {
     /// @dev Sets a new URI for all attribute types
     function setURI(string memory newuri) external;
 
+    /// @dev Base URI for computing {tokenURI}.
+    function setBaseURI(string memory newuri) external;
+
     /// @dev permit
     function permit(
         uint256 from,

@@ -34,6 +34,10 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     uint256 public constant override max = 10000;
     /// @dev Sponsor锁仓数据
     mapping(uint256 => LockVault) public _lockVault;
+    /// @dev sponsor数组
+    uint256[] public sponsors;
+    /// @dev sponsor数组索引;
+    mapping(uint256 => uint256) public sponsorIndex;
 
     /**
      * @dev 构造函数
@@ -86,6 +90,11 @@ contract DaoSponsor is Ownable, IDaoSponsor {
         la.time = block.timestamp + 365 days;
         // 为指定的NFT tokenId铸造sponsor值数量
         IWeb3DAOCN(WEB3DAONFT).mint(tokenId, SPONSOR_ATTR_ID, sponsorAmount);
+        // 记录sponsor数组
+        if (sponsorIndex[tokenId] == 0) {
+            sponsors.push(tokenId);
+            sponsorIndex[tokenId] = sponsors.length - 1;
+        }
         emit Sponsor(tokenId, ethAmount, sponsorAmount);
     }
 

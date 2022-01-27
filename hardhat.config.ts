@@ -40,7 +40,7 @@ task("dao", "deploy contract").setAction(
     const signers = await ethers.getSigners();
     const daoTicketAddress = "0xc1fae1924303cc7a816919b7a3935cda8bf8ef3d";
     let txHash =
-      "0x0bae7abfe5bd104a8764bb0cf10e5d07ed51077cb07c857050acc5de33f0a325";
+      "0xc04dfd53fb388f107e59556295a73eccc26afc17ac9db0fa16cc2a1b7c844c4d";
     const dao = (await ethers.getContractAt(
       "DaoTicket",
       daoTicketAddress,
