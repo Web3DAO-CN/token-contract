@@ -123,6 +123,7 @@ task("admin", "admin operate").setAction(
     await run("compile");
     const signers = await ethers.getSigners();
     const singer = signers[6];
+    let functionData: BytesLike;
 
     const token = (await ethers.getContractAt(
       "Web3DAOCN",
@@ -165,12 +166,21 @@ task("admin", "admin operate").setAction(
     await token.grantRole(MINTER_ROLE, buy.address);
     await token.grantRole(MINTER_ROLE, treasury.address);
     await token["mint(address)"](treasury.address);
-    await treasury.setDaoSponsor(sponsor.address);
-    await treasury.setHoldNFTId(BN(1));
-    await sponsor.transferOwnership(treasury.addresss);
-    await vault.transferOwnership(treasury.addresss);
+    await sponsor.transferOwnership(treasury.address);
+    await vault.transferOwnership(treasury.address);
     await buy.setMaxTotalSupply(BN(50));
-    await buy.transferOwnership(treasury.addresss);
+    await buy.transferOwnership(treasury.address);
+
+    functionData = treasury.interface.encodeFunctionData("setDaoSponsor", [
+      sponsor.address,
+    ]);
+    await treasury.submitTransaction(treasury.address, functionData);
+    console.log("DaoSponsor:", await treasury.DaoSponsor());
+    functionData = treasury.interface.encodeFunctionData("setHoldNFTId", [
+      BN(1),
+    ]);
+    await treasury.submitTransaction(treasury.address, functionData);
+    console.log("holdNFTId:", await treasury.holdNFTId());
   }
 );
 
