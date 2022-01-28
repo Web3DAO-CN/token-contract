@@ -51,6 +51,7 @@ describe("deploy Token", () => {
   let user1TokenId = BN(3);
   let user2TokenId = BN(4);
   let mintGasAmount: BigNumber;
+  let gasTax: BigNumber;
   before("deploy 部署合约", async () => {
     attrIds = [BN(1), BN(2), BN(3), BN(4), BN(5)];
     names = ["Gas", "Block", "Nonce", "Tx", "Sponsor"];
@@ -61,7 +62,7 @@ describe("deploy Token", () => {
 
     token = (await (
       await ethers.getContractFactory("Web3DAOCN")
-    ).deploy("")) as Web3DAOCN;
+    ).deploy()) as Web3DAOCN;
     console.log("token address:" + token.address.white);
 
     weth = (await (
@@ -76,20 +77,26 @@ describe("deploy Token", () => {
 
     buyNFT = (await (
       await ethers.getContractFactory("BuyNFT")
-    ).deploy(token.address, weth.address)) as BuyNFT;
+    ).deploy(token.address, vault.address, weth.address)) as BuyNFT;
     console.log("buyNFT address:" + buyNFT.address.white);
 
     treasury = (await (
       await ethers.getContractFactory("DaoTreasury")
-    ).deploy(token.address, weth.address, BN(1))) as DaoTreasury;
+    ).deploy(token.address, weth.address, vault.address, BN(1))) as DaoTreasury;
     console.log("DaoTreasury address:" + treasury.address.white);
 
     sponsor = (await (
       await ethers.getContractFactory("DaoSponsor")
-    ).deploy(token.address, BN(5))) as DaoSponsor;
+    ).deploy(
+      token.address,
+      vault.address,
+      treasury.address,
+      BN(5)
+    )) as DaoSponsor;
     console.log("DaoSponsor address:" + sponsor.address.white);
 
     price = await buyNFT.price();
+    gasTax = await treasury.gasTax();
   });
   describe("前置操作", () => {
     describe("NFT管理员操作", () => {
@@ -212,31 +219,6 @@ describe("deploy Token", () => {
           .to.emit(treasury, "CommiteeRemoval")
           .withArgs(wallet.address);
       });
-      it("DaoTreasury 设置DaoVault", async () => {
-        let functionData = treasury.interface.encodeFunctionData(
-          "setDaoVault",
-          [vault.address]
-        );
-        expect(
-          await treasury
-            .connect(commitee1)
-            .submitTransaction(treasury.address, functionData)
-        )
-          .to.emit(treasury, "Submission")
-          .withArgs(transactionId)
-          .to.emit(treasury, "Confirmation")
-          .withArgs(commitee1.address, transactionId);
-        expect(
-          await treasury.connect(commitee2).confirmTransaction(transactionId)
-        )
-          .to.emit(treasury, "Confirmation")
-          .withArgs(commitee2.address, transactionId)
-          .to.emit(treasury, "ExecutionSuccess")
-          .withArgs(transactionId)
-          .to.emit(treasury, "SetDaoVault")
-          .withArgs(vault.address);
-        transactionId = transactionId.add(BN(1));
-      });
       it("DaoTreasury 设置DaoSponsor", async () => {
         let functionData = treasury.interface.encodeFunctionData(
           "setDaoSponsor",
@@ -289,18 +271,6 @@ describe("deploy Token", () => {
       });
     });
     describe("DaoSponsor 管理操作", () => {
-      it("DaoSponsor 设置DaoVault", async () => {
-        expect(await sponsor.setDaoVault(vault.address))
-          .to.emit(sponsor, "SetDaoVault")
-          .withArgs(vault.address);
-      });
-
-      it("DaoSponsor 设置DaoTreasury", async () => {
-        expect(await sponsor.setDaoTreasury(treasury.address))
-          .to.emit(sponsor, "SetDaoTreasury")
-          .withArgs(treasury.address);
-      });
-
       it("DaoSponsor 转移owner权限", async () => {
         expect(await sponsor.transferOwnership(treasury.address))
           .to.emit(sponsor, "OwnershipTransferred")
@@ -315,10 +285,10 @@ describe("deploy Token", () => {
       });
     });
     describe("buyNFT 管理操作", () => {
-      it("buyNFT 设置DaoVault", async () => {
-        expect(await buyNFT.setDaoVault(vault.address))
-          .to.emit(buyNFT, "SetDaoVault")
-          .withArgs(vault.address);
+      it("buyNFT setMaxTotalSupply", async () => {
+        expect(await buyNFT.setMaxTotalSupply("100"))
+          .to.emit(buyNFT, "SetMaxTotalSupply")
+          .withArgs("100");
       });
       it("buyNFT 转移owner权限", async () => {
         expect(await buyNFT.transferOwnership(treasury.address))
@@ -559,7 +529,8 @@ describe("deploy Token", () => {
     it("DaoTreasury user2 sell gas", async () => {
       let buyEthAmount = sponsorETHAmount.div(2);
       let resciveGas = buyEthAmount.mul(gasAttrPrice);
-      reserve = reserve.sub(buyEthAmount);
+      let resciveETH = buyEthAmount.mul(BN(10000).sub(gasTax)).div(BN(10000));
+      reserve = reserve.sub(resciveETH);
       expect(
         await token
           .connect(user2)
@@ -581,9 +552,9 @@ describe("deploy Token", () => {
 
       expect(await treasury.connect(user2).sellGas(user2TokenId, resciveGas))
         .to.emit(vault, "Withdraw")
-        .withArgs(buyEthAmount, reserve)
+        .withArgs(resciveETH, reserve)
         .to.emit(weth, "Transfer")
-        .withArgs(vault.address, user2.address, buyEthAmount)
+        .withArgs(vault.address, user2.address, resciveETH)
         .to.emit(token, "TransferSingle")
         .withArgs(
           treasury.address,

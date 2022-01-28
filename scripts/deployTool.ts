@@ -37,7 +37,7 @@ export function compileSetting(version: string, runs: number) {
 }
 export const overrides: any = {
   gasLimit: 8000000,
-  nonce: BigNumber.from(0),
+  // nonce: BigNumber.from(0),
 };
 
 export async function deployContract(

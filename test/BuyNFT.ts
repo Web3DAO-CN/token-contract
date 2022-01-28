@@ -26,7 +26,7 @@ describe("deploy Token", () => {
   before("deploy", async () => {
     token = (await (
       await ethers.getContractFactory("Web3DAOCN")
-    ).deploy("")) as Web3DAOCN;
+    ).deploy()) as Web3DAOCN;
     console.log("token address:" + token.address.white);
 
     weth = (await (
@@ -41,10 +41,16 @@ describe("deploy Token", () => {
 
     buyNFT = (await (
       await ethers.getContractFactory("BuyNFT")
-    ).deploy(token.address, weth.address)) as BuyNFT;
-    console.log("buyNFT address:" + vault.address.white);
+    ).deploy(token.address, vault.address, weth.address)) as BuyNFT;
+    console.log("buyNFT address:" + buyNFT.address.white);
 
     price = await buyNFT.price();
+  });
+
+  it("buyNFT setMaxTotalSupply", async () => {
+    expect(await buyNFT.setMaxTotalSupply("100"))
+      .to.emit(buyNFT, "SetMaxTotalSupply")
+      .withArgs("100");
   });
 
   it("buyNFT setDaoVault", async () => {
@@ -87,7 +93,7 @@ describe("deploy Token", () => {
       .to.emit(buyNFT, "Buy")
       .withArgs(minter.address)
       .to.emit(vault, "Deposit")
-      .withArgs(price)
+      .withArgs(price, price)
       .to.emit(weth, "Transfer")
       .withArgs(minter.address, vault.address, price)
       .to.emit(token, "Transfer")

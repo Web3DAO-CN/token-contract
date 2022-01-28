@@ -42,10 +42,19 @@ contract DaoSponsor is Ownable, IDaoSponsor {
     /**
      * @dev 构造函数
      * @param _WEB3DAONFT NFT合约地址
+     * @param _DaoVault DaoVault合约地址
+     * @param _DaoTreasury DaoTreasury合约地址
      * @param _SPONSOR_ATTR_ID NFT合约中Sponsor attrId
      */
-    constructor(address _WEB3DAONFT, uint256 _SPONSOR_ATTR_ID) {
+    constructor(
+        address _WEB3DAONFT,
+        address _DaoVault,
+        address _DaoTreasury,
+        uint256 _SPONSOR_ATTR_ID
+    ) {
         WEB3DAONFT = _WEB3DAONFT;
+        DaoVault = _DaoVault;
+        DaoTreasury = _DaoTreasury;
         SPONSOR_ATTR_ID = _SPONSOR_ATTR_ID;
     }
 

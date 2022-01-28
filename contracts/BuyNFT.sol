@@ -31,10 +31,16 @@ contract BuyNFT is Ownable, IBuyNFT {
     /**
      * @dev 构造函数
      * @param _WEB3DAONFT NFT合约地址
+     * @param _DaoVault DaoVault合约地址
      * @param _WETH WETH合约地址
      */
-    constructor(address _WEB3DAONFT, address _WETH) {
+    constructor(
+        address _WEB3DAONFT,
+        address _DaoVault,
+        address _WETH
+    ) {
         WEB3DAONFT = _WEB3DAONFT;
+        DaoVault = _DaoVault;
         WETH = _WETH;
     }
 

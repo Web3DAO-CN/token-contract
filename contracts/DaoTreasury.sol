@@ -53,15 +53,18 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
      * @dev 构造函数
      * @param _WEB3DAONFT NFT合约地址
      * @param _WETH WETH合约地址
+     * @param _DaoVault DaoVault合约地址
      * @param _GAS_ATTR_ID NFT合约中Gas attrId
      */
     constructor(
         address _WEB3DAONFT,
         address _WETH,
+        address _DaoVault,
         uint256 _GAS_ATTR_ID
     ) {
         WEB3DAONFT = _WEB3DAONFT;
         WETH = _WETH;
+        DaoVault = _DaoVault;
         GAS_ATTR_ID = _GAS_ATTR_ID;
     }
 
@@ -149,7 +152,7 @@ contract DaoTreasury is MultiSign, IDaoTreasury {
             tokenId,
             holdNFTId,
             GAS_ATTR_ID,
-            ethAmount * gasAttrPrice
+            gasAmount
         );
         // 从DaoVault提取WETH
         IDaoVault(DaoVault).withdraw(ethAmount, msg.sender);

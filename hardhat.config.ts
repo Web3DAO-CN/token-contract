@@ -11,7 +11,6 @@ import {
   DaoSponsor,
   BuyNFT,
 } from "./typechain";
-import { mkdirSync, writeFileSync, readFileSync } from "fs";
 import { RPCS } from "./scripts/network";
 import { task } from "hardhat/config";
 import {
@@ -20,11 +19,9 @@ import {
   getContract,
   BN,
 } from "./scripts/deployTool";
-import { BigNumber, ContractTransaction, BytesLike, constants } from "ethers";
+import { BytesLike, constants } from "ethers";
 
 import Colors = require("colors.ts");
-import { tokenToString } from "typescript";
-import { util } from "chai";
 Colors.enable();
 const dotenv = require("dotenv");
 dotenv.config();
@@ -73,7 +70,7 @@ task("deploy", "deploy contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
-    const singer = signers[1];
+    const singer = signers[6];
 
     let weth =
       network.name == "maticmain"
@@ -99,6 +96,7 @@ task("deploy", "deploy contract").setAction(
 
     const buy = (await deployContract(ethers, "BuyNFT", network.name, singer, [
       token.address,
+      vault.address,
       weth,
     ])) as BuyNFT;
 
@@ -107,7 +105,7 @@ task("deploy", "deploy contract").setAction(
       "DaoTreasury",
       network.name,
       singer,
-      [token.address, weth, BN(1)]
+      [token.address, weth, vault.address, BN(1)]
     )) as DaoTreasury;
 
     const sponsor = (await deployContract(
@@ -115,7 +113,7 @@ task("deploy", "deploy contract").setAction(
       "DaoSponsor",
       network.name,
       singer,
-      [token.address, BN(5)]
+      [token.address, vault.address, treasury.address, BN(5)]
     )) as DaoSponsor;
   }
 );
@@ -124,14 +122,7 @@ task("admin", "admin operate").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
-    const singer = signers[1];
-
-    let weth =
-      network.name == "maticmain"
-        ? WETH_MATIC
-        : network.name == "matictest"
-        ? WETH_MATIC_TEST
-        : constants.AddressZero;
+    const singer = signers[6];
 
     const token = (await ethers.getContractAt(
       "Web3DAOCN",
@@ -174,84 +165,22 @@ task("admin", "admin operate").setAction(
     await token.grantRole(MINTER_ROLE, buy.address);
     await token.grantRole(MINTER_ROLE, treasury.address);
     await token["mint(address)"](treasury.address);
+    await treasury.setDaoSponsor(sponsor.address);
+    await treasury.setHoldNFTId(BN(1));
+    await sponsor.transferOwnership(treasury.addresss);
+    await vault.transferOwnership(treasury.addresss);
+    await buy.setMaxTotalSupply(BN(50));
+    await buy.transferOwnership(treasury.addresss);
   }
 );
 
 task("veri", "verify contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("verify:verify", getContract(network.name, "Web3DAOCN"));
-  }
-);
-
-task("create", "create attr").setAction(
-  async (taskArgs, { ethers, run, network }) => {
-    let json = getContract(network.name, "Web3DAOCN");
-    if (json.address) {
-      const signers = await ethers.getSigners();
-      let token = (await ethers.getContractAt(
-        "Web3DAOCN",
-        json.address,
-        signers[1]
-      )) as Web3DAOCN;
-      let attrIds = [BN(1), BN(2), BN(3), BN(4), BN(5)];
-      let names = ["Gas", "Block", "Nonce", "Tx", "Sponsor"];
-      let symbols = ["gas", "block", "nonce", "tx", "sp"];
-      let decimals = [18, 18, 18, 18, 18];
-      let uris = ["", "", "", "", ""];
-      await token.createBatch(attrIds, names, symbols, decimals, uris);
-    }
-  }
-);
-
-task("mint", "mint nft").setAction(
-  async (taskArgs, { ethers, run, network }) => {
-    const signers = await ethers.getSigners();
-    let dao = (await ethers.getContractAt(
-      "Web3DAOCN",
-      "0xCAE0947f783081F1d7c0850F69EcD75b574B3D91",
-      signers[1]
-    )) as Web3DAOCN;
-
-    const path = `./deployments/${network.name}/`;
-    const file = `accounts.json`;
-    let accounts = JSON.parse(readFileSync(path + file).toString());
-    let receipt: ContractTransaction;
-    for (let i = 0; i < accounts.length; i++) {
-      receipt = await dao["mint(address)"](accounts[i].account);
-      let resoult = await receipt.wait();
-      console.log(resoult.transactionHash);
-    }
-  }
-);
-
-task("get", "get address").setAction(
-  async (taskArgs, { ethers, run, network }) => {
-    let address = "0xc1fae1924303CC7a816919B7A3935Cda8Bf8eF3d";
-    const signers = await ethers.getSigners();
-    let daoTicket = (await ethers.getContractAt(
-      "DaoTicket",
-      address,
-      signers[0]
-    )) as DaoTicket;
-    // let max = (await daoTicket.test266151307()).toNumber();
-    let max = 20;
-    let json: {
-      id: number;
-      account: string;
-    }[] = [];
-    let account: string;
-    for (let i = 0; i < max; i++) {
-      account = await daoTicket.mintToSell9630191(i);
-      json[i] = {
-        id: i + 1,
-        account: account,
-      };
-    }
-    const path = `./deployments/${network.name}/`;
-    const file = `accounts.json`;
-    mkdirSync(path, { recursive: true });
-    writeFileSync(path + file, JSON.stringify(json));
-    console.log(json);
+    await run("verify:verify", getContract(network.name, "DaoVault"));
+    await run("verify:verify", getContract(network.name, "BuyNFT"));
+    await run("verify:verify", getContract(network.name, "DaoTreasury"));
+    await run("verify:verify", getContract(network.name, "DaoSponsor"));
   }
 );
 

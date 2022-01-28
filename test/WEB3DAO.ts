@@ -23,7 +23,7 @@ describe("deploy Token", () => {
   before("deploy", async () => {
     token = (await (
       await ethers.getContractFactory("Web3DAOCN")
-    ).deploy("")) as Web3DAOCN;
+    ).deploy()) as Web3DAOCN;
     console.log("token address:" + token.address.white);
     attrIds = [BN(1), BN(2), BN(3), BN(4)];
     names = ["Gas", "Block", "Nonce", "Tx"];
