@@ -25,6 +25,8 @@ contract BuyNFT is Ownable, IBuyNFT {
     address public override DaoVault;
     /// @dev NFT 价格
     uint256 public override price = 0.025 ether;
+    /// @dev NFT数量限制
+    uint256 public override maxTotalSupply;
 
     /**
      * @dev 构造函数
@@ -51,7 +53,22 @@ contract BuyNFT is Ownable, IBuyNFT {
         IDaoVault(DaoVault).deposit(price);
         // 铸造nft
         IWeb3DAOCN(WEB3DAONFT).mint(to);
+        // 确认总供应量小于最大供应量
+        require(
+            IWeb3DAOCN(WEB3DAONFT).totalSupply() <= maxTotalSupply,
+            "BuyNFT: over max totalSupply"
+        );
         emit Buy(to);
+    }
+
+    /// @dev See {IBuyNFT-setMaxTotalSupply}.
+    function setMaxTotalSupply(uint256 _maxTotalSupply)
+        public
+        override
+        onlyOwner
+    {
+        maxTotalSupply = _maxTotalSupply;
+        emit SetMaxTotalSupply(_maxTotalSupply);
     }
 
     /// @dev See {IBuyNFT-setPrice}.

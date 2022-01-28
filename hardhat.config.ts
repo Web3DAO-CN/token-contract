@@ -3,7 +3,14 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
-import { Web3DAOCN, DaoTicket } from "./typechain";
+import {
+  Web3DAOCN,
+  DaoTicket,
+  DaoVault,
+  DaoTreasury,
+  DaoSponsor,
+  BuyNFT,
+} from "./typechain";
 import { mkdirSync, writeFileSync, readFileSync } from "fs";
 import { RPCS } from "./scripts/network";
 import { task } from "hardhat/config";
@@ -13,7 +20,7 @@ import {
   getContract,
   BN,
 } from "./scripts/deployTool";
-import { BigNumber, ContractTransaction, BytesLike } from "ethers";
+import { BigNumber, ContractTransaction, BytesLike, constants } from "ethers";
 
 import Colors = require("colors.ts");
 import { tokenToString } from "typescript";
@@ -21,6 +28,11 @@ import { util } from "chai";
 Colors.enable();
 const dotenv = require("dotenv");
 dotenv.config();
+
+const WETH_MATIC = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
+const WETH_MATIC_TEST = "0x6817c8475Ad33Aa86422160C3d1C673c453A76dE";
+const MINTER_ROLE: BytesLike =
+  "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
 
 task("accounts", "Prints the list of accounts", async (taskArgs, bre) => {
   const accounts = await bre.ethers.getSigners();
@@ -61,16 +73,110 @@ task("deploy", "deploy contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
-    const token = await deployContract(
+    const singer = signers[1];
+
+    let weth =
+      network.name == "maticmain"
+        ? WETH_MATIC
+        : network.name == "matictest"
+        ? WETH_MATIC_TEST
+        : constants.AddressZero;
+
+    const token = (await deployContract(
       ethers,
       "Web3DAOCN",
       network.name,
-      signers[1],
-      [""]
-    );
-    await run("verify:verify", getContract(network.name, "Web3DAOCN"));
+      singer
+    )) as Web3DAOCN;
+
+    const vault = (await deployContract(
+      ethers,
+      "DaoVault",
+      network.name,
+      singer,
+      [weth]
+    )) as DaoVault;
+
+    const buy = (await deployContract(ethers, "BuyNFT", network.name, singer, [
+      token.address,
+      weth,
+    ])) as BuyNFT;
+
+    const treasury = (await deployContract(
+      ethers,
+      "DaoTreasury",
+      network.name,
+      singer,
+      [token.address, weth, BN(1)]
+    )) as DaoTreasury;
+
+    const sponsor = (await deployContract(
+      ethers,
+      "DaoSponsor",
+      network.name,
+      singer,
+      [token.address, BN(5)]
+    )) as DaoSponsor;
   }
 );
+
+task("admin", "admin operate").setAction(
+  async (taskArgs, { ethers, run, network }) => {
+    await run("compile");
+    const signers = await ethers.getSigners();
+    const singer = signers[1];
+
+    let weth =
+      network.name == "maticmain"
+        ? WETH_MATIC
+        : network.name == "matictest"
+        ? WETH_MATIC_TEST
+        : constants.AddressZero;
+
+    const token = (await ethers.getContractAt(
+      "Web3DAOCN",
+      getContract(network.name, "Web3DAOCN"),
+      singer
+    )) as Web3DAOCN;
+
+    const vault = (await ethers.getContractAt(
+      "DaoVault",
+      getContract(network.name, "DaoVault"),
+      singer
+    )) as DaoVault;
+
+    const buy = (await ethers.getContractAt(
+      "BuyNFT",
+      getContract(network.name, "BuyNFT"),
+      singer
+    )) as BuyNFT;
+
+    const treasury = (await ethers.getContractAt(
+      "DaoTreasury",
+      getContract(network.name, "DaoTreasury"),
+      singer
+    )) as DaoTreasury;
+
+    const sponsor = (await ethers.getContractAt(
+      "DaoSponsor",
+      getContract(network.name, "DaoSponsor"),
+      singer
+    )) as DaoSponsor;
+
+    let attrIds = [BN(1), BN(2), BN(3), BN(4), BN(5)];
+    let names = ["Gas", "Block", "Nonce", "Tx", "Sponsor"];
+    let symbols = ["gas", "block", "nonce", "tx", "sp"];
+    let decimals = [18, 18, 18, 18, 18];
+    let uris = ["", "", "", "", ""];
+    await token.createBatch(attrIds, names, symbols, decimals, uris);
+
+    await token.grantRole(MINTER_ROLE, sponsor.address);
+    await token.grantRole(MINTER_ROLE, buy.address);
+    await token.grantRole(MINTER_ROLE, treasury.address);
+    await token["mint(address)"](treasury.address);
+  }
+);
+
 task("veri", "verify contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("verify:verify", getContract(network.name, "Web3DAOCN"));
@@ -82,17 +188,17 @@ task("create", "create attr").setAction(
     let json = getContract(network.name, "Web3DAOCN");
     if (json.address) {
       const signers = await ethers.getSigners();
-      let dao = (await ethers.getContractAt(
+      let token = (await ethers.getContractAt(
         "Web3DAOCN",
         json.address,
         signers[1]
       )) as Web3DAOCN;
-      let attrIds = [BN(1), BN(2), BN(3), BN(4)];
-      let names = ["Gas", "Block", "Nonce", "Tx"];
-      let symbols = ["gas", "block", "nonce", "tx"];
-      let decimals = [18, 18, 18, 18];
-      let uris = ["", "", "", ""];
-      await dao.createBatch(attrIds, names, symbols, decimals, uris);
+      let attrIds = [BN(1), BN(2), BN(3), BN(4), BN(5)];
+      let names = ["Gas", "Block", "Nonce", "Tx", "Sponsor"];
+      let symbols = ["gas", "block", "nonce", "tx", "sp"];
+      let decimals = [18, 18, 18, 18, 18];
+      let uris = ["", "", "", "", ""];
+      await token.createBatch(attrIds, names, symbols, decimals, uris);
     }
   }
 );

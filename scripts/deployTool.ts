@@ -48,16 +48,17 @@ export async function deployContract(
   args: Array<any> = [],
   libraries: Libraries = {}
 ): Promise<Contract> {
-    const factory = await ethers.getContractFactory(name, {
-      signer: signer,
-      libraries: libraries,
-    });
-    const contract = await factory.deploy(...args, overrides);
-    console.log("Deploying:", name.white);
-    console.log("  to", contract.address.white);
-    console.log("  in", contract.deployTransaction.hash.white);
-    await saveFile(network, name, contract, args, libraries);
-    return contract.deployed();
+  console.log("Deploying:", name.white);
+  console.log("account:", (await signer.getAddress()).white);
+  const factory = await ethers.getContractFactory(name, {
+    signer: signer,
+    libraries: libraries,
+  });
+  const contract = await factory.deploy(...args, overrides);
+  console.log("  to", contract.address.white);
+  console.log("  in", contract.deployTransaction.hash.white);
+  await saveFile(network, name, contract, args, libraries);
+  return contract.deployed();
 }
 export function getContract(network: string, name: string) {
   const nameArr = name.split(":");

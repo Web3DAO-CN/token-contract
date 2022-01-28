@@ -2,7 +2,6 @@ build
 node_modules
 .idea/*
 .vscode/
-typechain/
 cache/
 flattened
 .env.development

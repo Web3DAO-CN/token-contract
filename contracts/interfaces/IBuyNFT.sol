@@ -12,6 +12,9 @@ interface IBuyNFT {
     /// @dev 设置DaoVault
     event SetDaoVault(address _DaoVault);
 
+    /// @dev event set max totalSupply
+    event SetMaxTotalSupply(uint256 _maxTotalSupply);
+
     /// @dev NFT合约地址
     function WEB3DAONFT() external view returns (address);
 
@@ -23,6 +26,12 @@ interface IBuyNFT {
 
     /// @dev NFT 价格
     function price() external view returns (uint256);
+
+    /// @dev NFT数量限制
+    function maxTotalSupply() external view returns (uint256);
+
+    /// @dev set nft max totalSupply
+    function setMaxTotalSupply(uint256 _maxTotalSupply) external;
 
     /**
      * @dev 购买NFT
