@@ -17,6 +17,7 @@ import {
   compileSetting,
   deployContract,
   getContract,
+  getContractJson,
   BN,
 } from "./scripts/deployTool";
 import { BytesLike, constants } from "ethers";
@@ -186,11 +187,11 @@ task("admin", "admin operate").setAction(
 
 task("veri", "verify contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
-    await run("verify:verify", getContract(network.name, "Web3DAOCN"));
-    await run("verify:verify", getContract(network.name, "DaoVault"));
-    await run("verify:verify", getContract(network.name, "BuyNFT"));
-    await run("verify:verify", getContract(network.name, "DaoTreasury"));
-    await run("verify:verify", getContract(network.name, "DaoSponsor"));
+    await run("verify:verify", getContractJson(network.name, "Web3DAOCN"));
+    await run("verify:verify", getContractJson(network.name, "DaoVault"));
+    await run("verify:verify", getContractJson(network.name, "BuyNFT"));
+    await run("verify:verify", getContractJson(network.name, "DaoTreasury"));
+    await run("verify:verify", getContractJson(network.name, "DaoSponsor"));
   }
 );
 

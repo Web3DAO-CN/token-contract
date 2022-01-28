@@ -76,6 +76,18 @@ export function getContract(network: string, name: string) {
   }
 }
 
+export function getContractJson(network: string, name: string) {
+  const nameArr = name.split(":");
+  const contractName = nameArr.length > 1 ? nameArr[1] : nameArr[0];
+  const path = `./deployments/${network}/`;
+  const latest = `${contractName}.json`;
+
+  if (existsSync(path + latest)) {
+    return JSON.parse(readFileSync(path + latest).toString());
+  } else {
+    return "";
+  }
+}
 export async function saveFile(
   network: string,
   name: string,
