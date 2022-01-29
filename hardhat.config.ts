@@ -20,7 +20,7 @@ import {
   getContractJson,
   BN,
 } from "./scripts/deployTool";
-import { BytesLike, constants } from "ethers";
+import { BytesLike, constants, BigNumber } from "ethers";
 
 import Colors = require("colors.ts");
 Colors.enable();
@@ -184,6 +184,28 @@ task("admin", "admin operate").setAction(
     console.log("holdNFTId:", await treasury.holdNFTId());
   }
 );
+
+task("gas", "admin mintGas")
+  .addParam("gas", "the gas amount")
+  .setAction(async ({gas}, { ethers, run, network }) => {
+    await run("compile");
+    const signers = await ethers.getSigners();
+    const singer = signers[6];
+    let functionData: BytesLike;
+
+    const treasury = (await ethers.getContractAt(
+      "DaoTreasury",
+      getContract(network.name, "DaoTreasury"),
+      singer
+    )) as DaoTreasury;
+
+    functionData = treasury.interface.encodeFunctionData("mintGas", [
+      BigNumber.from(gas),
+    ]);
+
+    let receipt = await treasury.submitTransaction(treasury.address, functionData);
+    console.log(await receipt.wait())
+  });
 
 task("veri", "verify contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
