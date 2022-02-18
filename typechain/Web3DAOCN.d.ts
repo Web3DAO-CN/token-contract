@@ -47,7 +47,7 @@ interface Web3DAOCNInterface extends ethers.utils.Interface {
     "mint(uint256,uint256,uint256)": FunctionFragment;
     "mintBatch(uint256,uint256[],uint256[])": FunctionFragment;
     "name(uint256)": FunctionFragment;
-    "nonces(address)": FunctionFragment;
+    "nonces(uint256,uint256)": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
     "permit(uint256,uint256,uint256,uint256,uint256,bytes)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
@@ -156,7 +156,10 @@ interface Web3DAOCNInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish[], BigNumberish[]]
   ): string;
   encodeFunctionData(functionFragment: "name", values: [BigNumberish]): string;
-  encodeFunctionData(functionFragment: "nonces", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "nonces",
+    values: [BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
@@ -704,14 +707,16 @@ export class Web3DAOCN extends Contract {
     }>;
 
     nonces(
-      arg0: string,
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: BigNumber;
     }>;
 
-    "nonces(address)"(
-      arg0: string,
+    "nonces(uint256,uint256)"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: BigNumber;
@@ -1190,10 +1195,15 @@ export class Web3DAOCN extends Contract {
 
   "name()"(overrides?: CallOverrides): Promise<string>;
 
-  nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+  nonces(
+    arg0: BigNumberish,
+    arg1: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
-  "nonces(address)"(
-    arg0: string,
+  "nonces(uint256,uint256)"(
+    arg0: BigNumberish,
+    arg1: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -1641,10 +1651,15 @@ export class Web3DAOCN extends Contract {
 
     "name()"(overrides?: CallOverrides): Promise<string>;
 
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+    nonces(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
-    "nonces(address)"(
-      arg0: string,
+    "nonces(uint256,uint256)"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -2168,10 +2183,15 @@ export class Web3DAOCN extends Contract {
 
     "name()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+    nonces(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
-    "nonces(address)"(
-      arg0: string,
+    "nonces(uint256,uint256)"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -2637,12 +2657,14 @@ export class Web3DAOCN extends Contract {
     "name()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     nonces(
-      arg0: string,
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "nonces(address)"(
-      arg0: string,
+    "nonces(uint256,uint256)"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

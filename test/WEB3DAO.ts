@@ -356,7 +356,7 @@ describe("deploy Token", () => {
     ).to.be.revertedWith("Web3DAOCN: caller is not the nft holder");
   });
   it("permit approve", async () => {
-    let nonce: BigNumber = await token.nonces(tokenHolder3.address);
+    let nonce: BigNumber = await token.nonces(BN(3), BN(2));
     let deadline = Math.floor(new Date().getTime() / 1000) + 100;
     let signature = await getPermit(
       tokenHolder3,
