@@ -47,8 +47,9 @@ interface Web3DAOCNInterface extends ethers.utils.Interface {
     "mint(uint256,uint256,uint256)": FunctionFragment;
     "mintBatch(uint256,uint256[],uint256[])": FunctionFragment;
     "name(uint256)": FunctionFragment;
+    "nonces(address)": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
-    "permit(uint256,uint256,uint256,uint256,bytes)": FunctionFragment;
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
@@ -155,13 +156,21 @@ interface Web3DAOCNInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish[], BigNumberish[]]
   ): string;
   encodeFunctionData(functionFragment: "name", values: [BigNumberish]): string;
+  encodeFunctionData(functionFragment: "nonces", values: [string]): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "permit",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BytesLike]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BytesLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
@@ -265,6 +274,7 @@ interface Web3DAOCNInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mintBatch", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "nonces", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "permit", data: BytesLike): Result;
   decodeFunctionResult(
@@ -693,6 +703,20 @@ export class Web3DAOCN extends Contract {
       0: string;
     }>;
 
+    nonces(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: BigNumber;
+    }>;
+
+    "nonces(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: BigNumber;
+    }>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -712,15 +736,17 @@ export class Web3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
@@ -1164,6 +1190,13 @@ export class Web3DAOCN extends Contract {
 
   "name()"(overrides?: CallOverrides): Promise<string>;
 
+  nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  "nonces(address)"(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
   "ownerOf(uint256)"(
@@ -1176,15 +1209,17 @@ export class Web3DAOCN extends Contract {
     to: BigNumberish,
     attrId: BigNumberish,
     amount: BigNumberish,
+    deadline: BigNumberish,
     signature: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "permit(uint256,uint256,uint256,uint256,bytes)"(
+  "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
     from: BigNumberish,
     to: BigNumberish,
     attrId: BigNumberish,
     amount: BigNumberish,
+    deadline: BigNumberish,
     signature: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
@@ -1606,6 +1641,13 @@ export class Web3DAOCN extends Contract {
 
     "name()"(overrides?: CallOverrides): Promise<string>;
 
+    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "nonces(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
     "ownerOf(uint256)"(
@@ -1618,15 +1660,17 @@ export class Web3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -2124,6 +2168,13 @@ export class Web3DAOCN extends Contract {
 
     "name()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "nonces(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -2139,15 +2190,17 @@ export class Web3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
@@ -2583,6 +2636,16 @@ export class Web3DAOCN extends Contract {
 
     "name()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    nonces(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "nonces(address)"(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -2598,15 +2661,17 @@ export class Web3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;

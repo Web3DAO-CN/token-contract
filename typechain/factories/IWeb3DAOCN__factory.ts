@@ -249,6 +249,11 @@ const _abi = [
         type: "uint256",
       },
       {
+        internalType: "uint256",
+        name: "deadline",
+        type: "uint256",
+      },
+      {
         internalType: "bytes",
         name: "signature",
         type: "bytes",

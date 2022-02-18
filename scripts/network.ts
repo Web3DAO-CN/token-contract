@@ -36,7 +36,7 @@ export const RPCS = {
     },
   },
   maticmain: {
-    url: `https://rpc-mainnet.maticvigil.com`,
+    url: `https://matic-mainnet.chainstacklabs.com`,
     chainId: 137,
     accounts: {
       mnemonic: process.env.MNEMONIC,

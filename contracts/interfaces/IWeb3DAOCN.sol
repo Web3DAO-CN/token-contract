@@ -75,6 +75,7 @@ interface IWeb3DAOCN {
         uint256 to,
         uint256 attrId,
         uint256 amount,
+        uint256 deadline,
         bytes memory signature
     ) external;
 }

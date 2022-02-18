@@ -23,11 +23,13 @@ contract Web3DAOCN is
     Counters.Counter private _tokenIdTracker;
     /// @dev constant bytes
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev permit nonce
+    mapping(address => uint256) public nonces;
 
     // solhint-disable-next-line var-name-mixedcase
     bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256(
-            "approve(uint256 from,uint256 to,uint256 attrId,uint256 amount)"
+            "permit(uint256 from,uint256 to,uint256 attrId,uint256 amount,uint256 deadline,uint256 nonce)"
         );
 
     /// @dev Attr transfer is allow
@@ -216,14 +218,25 @@ contract Web3DAOCN is
         uint256 to,
         uint256 attrId,
         uint256 amount,
+        uint256 deadline,
         bytes memory signature
     ) public override {
+        require(deadline >= block.timestamp, "Permit: EXPIRED");
+        address owner = ownerOf(from);
         bytes32 structHash = keccak256(
-            abi.encode(_PERMIT_TYPEHASH, from, to, attrId, amount)
+            abi.encode(
+                _PERMIT_TYPEHASH,
+                from,
+                to,
+                attrId,
+                amount,
+                deadline,
+                nonces[owner]++
+            )
         );
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, signature);
-        require(ownerOf(from) == signer, "Permit: invalid signature");
+        require(owner == signer, "Permit: invalid signature");
         _approve(from, to, attrId, amount);
     }
 

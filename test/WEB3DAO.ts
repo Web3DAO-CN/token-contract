@@ -9,7 +9,8 @@ import { expandTo18Decimals, BN, MINTER_ROLE } from "./shared/constant";
 import Colors = require("colors.ts");
 Colors.enable();
 
-const [wallet, minter, tokenHolder1, tokenHolder2, tokenHolder3] = waffle.provider.getWallets();
+const [wallet, minter, tokenHolder1, tokenHolder2, tokenHolder3] =
+  waffle.provider.getWallets();
 
 describe("deploy Token", () => {
   let token: Web3DAOCN;
@@ -53,7 +54,9 @@ describe("deploy Token", () => {
       .withArgs(MINTER_ROLE, wallet.address, wallet.address);
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder1.address);
+    receipt = await token
+      .connect(minter)
+      ["mint(address)"](tokenHolder1.address);
     expect(receipt)
       .to.emit(token, "Transfer")
       .withArgs(constants.AddressZero, tokenHolder1.address, BN(1));
@@ -213,7 +216,9 @@ describe("deploy Token", () => {
     ).to.be.revertedWith("Web3DAOCN: caller is not the nft holder");
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder2.address);
+    receipt = await token
+      .connect(minter)
+      ["mint(address)"](tokenHolder2.address);
     expect(receipt)
       .to.emit(token, "Transfer")
       .withArgs(constants.AddressZero, tokenHolder2.address, BN(2));
@@ -313,7 +318,9 @@ describe("deploy Token", () => {
       .withArgs(wallet.address, BN(1), BN(2), attrIds[1], amounts[1]);
   });
   it("mint NFT", async () => {
-    receipt = await token.connect(minter)["mint(address)"](tokenHolder3.address);
+    receipt = await token
+      .connect(minter)
+      ["mint(address)"](tokenHolder3.address);
     expect(receipt)
       .to.emit(token, "Transfer")
       .withArgs(constants.AddressZero, tokenHolder3.address, BN(3));
@@ -349,17 +356,21 @@ describe("deploy Token", () => {
     ).to.be.revertedWith("Web3DAOCN: caller is not the nft holder");
   });
   it("permit approve", async () => {
+    let nonce: BigNumber = await token.nonces(tokenHolder3.address);
+    let deadline = Math.floor(new Date().getTime() / 1000) + 100;
     let signature = await getPermit(
       tokenHolder3,
       token.address,
       BN(3),
       BN(2),
       attrIds[0],
-      amounts[0]
+      amounts[0],
+      BN(deadline),
+      nonce
     );
     receipt = await token
       .connect(wallet)
-      .permit(BN(3), BN(2), attrIds[0], amounts[0], signature);
+      .permit(BN(3), BN(2), attrIds[0], amounts[0], BN(deadline), signature);
     expect(receipt)
       .to.emit(token, "AttributeApproval")
       .withArgs(wallet.address, BN(3), BN(2), attrIds[0], amounts[0]);

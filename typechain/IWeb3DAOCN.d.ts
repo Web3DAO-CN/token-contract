@@ -29,7 +29,7 @@ interface IWeb3DAOCNInterface extends ethers.utils.Interface {
     "createBatch(uint256[],string[],string[],uint8[],string[])": FunctionFragment;
     "mint(uint256,uint256,uint256)": FunctionFragment;
     "mintBatch(uint256,uint256[],uint256[])": FunctionFragment;
-    "permit(uint256,uint256,uint256,uint256,bytes)": FunctionFragment;
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)": FunctionFragment;
     "setAttrTransferAllow(uint256,bool)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
     "setURI(string)": FunctionFragment;
@@ -66,7 +66,14 @@ interface IWeb3DAOCNInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "permit",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BytesLike]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BytesLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "setAttrTransferAllow",
@@ -234,15 +241,17 @@ export class IWeb3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
@@ -390,15 +399,17 @@ export class IWeb3DAOCN extends Contract {
     to: BigNumberish,
     attrId: BigNumberish,
     amount: BigNumberish,
+    deadline: BigNumberish,
     signature: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "permit(uint256,uint256,uint256,uint256,bytes)"(
+  "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
     from: BigNumberish,
     to: BigNumberish,
     attrId: BigNumberish,
     amount: BigNumberish,
+    deadline: BigNumberish,
     signature: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
@@ -539,15 +550,17 @@ export class IWeb3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -687,15 +700,17 @@ export class IWeb3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
@@ -834,15 +849,17 @@ export class IWeb3DAOCN extends Contract {
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "permit(uint256,uint256,uint256,uint256,bytes)"(
+    "permit(uint256,uint256,uint256,uint256,uint256,bytes)"(
       from: BigNumberish,
       to: BigNumberish,
       attrId: BigNumberish,
       amount: BigNumberish,
+      deadline: BigNumberish,
       signature: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;

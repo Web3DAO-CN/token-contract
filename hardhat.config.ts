@@ -50,7 +50,7 @@ task("dao", "deploy contract").setAction(
     const signers = await ethers.getSigners();
     const daoTicketAddress = "0xc1fae1924303cc7a816919b7a3935cda8bf8ef3d";
     let txHash =
-      "0xc04dfd53fb388f107e59556295a73eccc26afc17ac9db0fa16cc2a1b7c844c4d";
+      "0x9c8e4e63497a70f7505f36e58f62f5cc9ee8b88c48e471db8203b4e9ff944ed0";
     const dao = (await ethers.getContractAt(
       "DaoTicket",
       daoTicketAddress,
@@ -71,7 +71,8 @@ task("deploy", "deploy contract").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
-    const singer = signers[6];
+    // const singer = signers[6];
+    const singer = signers[0];
 
     let weth =
       network.name == "maticmain"
@@ -123,7 +124,8 @@ task("admin", "admin operate").setAction(
   async (taskArgs, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
-    const singer = signers[6];
+    // const singer = signers[6];
+    const singer = signers[0];
     let functionData: BytesLike;
 
     const token = (await ethers.getContractAt(
@@ -166,6 +168,7 @@ task("admin", "admin operate").setAction(
     await token.grantRole(MINTER_ROLE, sponsor.address);
     await token.grantRole(MINTER_ROLE, buy.address);
     await token.grantRole(MINTER_ROLE, treasury.address);
+    await token.setAttrTransferAllow(BN(1), true);
     await token["mint(address)"](treasury.address);
     await sponsor.transferOwnership(treasury.address);
     await vault.transferOwnership(treasury.address);
@@ -187,7 +190,7 @@ task("admin", "admin operate").setAction(
 
 task("gas", "admin mintGas")
   .addParam("gas", "the gas amount")
-  .setAction(async ({gas}, { ethers, run, network }) => {
+  .setAction(async ({ gas }, { ethers, run, network }) => {
     await run("compile");
     const signers = await ethers.getSigners();
     const singer = signers[6];
@@ -203,8 +206,11 @@ task("gas", "admin mintGas")
       BigNumber.from(gas),
     ]);
 
-    let receipt = await treasury.submitTransaction(treasury.address, functionData);
-    console.log(await receipt.wait())
+    let receipt = await treasury.submitTransaction(
+      treasury.address,
+      functionData
+    );
+    console.log(await receipt.wait());
   });
 
 task("veri", "verify contract").setAction(
